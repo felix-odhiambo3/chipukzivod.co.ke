@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,12 +20,10 @@ export default function HomePage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
   const now = new Date().toISOString();
 
   const eventsQuery = useMemoFirebase(() => {
-    // Only fetch events if the user is authenticated.
-    if (!firestore || !user) return null;
+    if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
       where('published', '==', true),
@@ -33,10 +31,9 @@ export default function HomePage() {
       orderBy('startDatetime', 'asc'),
       limit(3)
     );
-  }, [firestore, user, now]);
+  }, [firestore, now]);
 
-  const { data: events, isLoading: isLoadingEvents } = useCollection<Event>(eventsQuery);
-  const isLoading = isUserLoading || isLoadingEvents;
+  const { data: events, isLoading } = useCollection<Event>(eventsQuery);
 
   const eventsSlider = [
     {
@@ -193,7 +190,7 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               ))}
-              {user && !isLoading && events && events.map((event) => (
+              {!isLoading && events && events.length > 0 && events.map((event) => (
                 <Card key={event.id} className="overflow-hidden">
                   {event.imageUrl && <Image src={event.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint="event photo"/>}
                   <CardHeader>
@@ -209,9 +206,9 @@ export default function HomePage() {
                 </Card>
               ))}
             </div>
-            {!isLoading && (!user || events?.length === 0) && (
+            {!isLoading && (!events || events?.length === 0) && (
               <p className="text-center text-muted-foreground mt-12">
-                {user ? 'No upcoming events right now. Check back soon!' : 'Please log in to see upcoming events.'}
+                No upcoming events right now. Check back soon!
               </p>
             )}
           </div>
@@ -258,5 +255,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
