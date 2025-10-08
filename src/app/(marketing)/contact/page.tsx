@@ -186,7 +186,10 @@ export default function ContactPage() {
                         <FormField control={form.control} name="organization" render={({ field }) => ( <FormItem> <FormLabel>Organization / Company</FormLabel> <FormControl> <Input placeholder="Your Company Inc." {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                     </div>
 
-                    <FormField control={form.control} name="service" render={({ field }) => (
+                    <FormField
+                      control={form.control}
+                      name="service"
+                      render={({ field }) => (
                         <FormItem>
                           <FormLabel>Service Type *</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -207,46 +210,55 @@ export default function ContactPage() {
                           </Select>
                           <FormMessage />
                         </FormItem>
-                    )} />
+                      )}
+                    />
 
                   <FormField control={form.control} name="message" render={({ field }) => ( <FormItem> <FormLabel>Message *</FormLabel> <FormControl> <Textarea placeholder="Tell us about your project or training needs..." {...field} rows={5} /> </FormControl> <FormMessage /> </FormItem> )} />
 
                   <div className="grid sm:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="contactMethod" render={({ field }) => (
+                    <FormField
+                      control={form.control}
+                      name="contactMethod"
+                      render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Preferred Contact Method</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="email">Email</SelectItem>
-                                    <SelectItem value="phone">Phone</SelectItem>
-                                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                                </SelectContent>
-                             </Select>
+                          <FormLabel>Preferred Contact Method</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="email">Email</SelectItem>
+                              <SelectItem value="phone">Phone</SelectItem>
+                              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormItem>
-                    )} />
-                     <FormField control={form.control} name="preferredTime" render={({ field }) => (
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="preferredTime"
+                      render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Preferred Time</FormLabel>
-                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue/>
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
-                                    <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
-                                    <SelectItem value="evening">Evening (5pm-7pm)</SelectItem>
-                                    <SelectItem value="anytime">Anytime</SelectItem>
-                                </SelectContent>
-                             </Select>
+                          <FormLabel>Preferred Time</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
+                              <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
+                              <SelectItem value="evening">Evening (5pm-7pm)</SelectItem>
+                              <SelectItem value="anytime">Anytime</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormItem>
-                    )} />
+                      )}
+                    />
                   </div>
 
                   <div className="text-center">
@@ -275,4 +287,5 @@ export default function ContactPage() {
       </section>
     </div>
   );
-}
+
+    
