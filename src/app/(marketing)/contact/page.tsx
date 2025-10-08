@@ -1,3 +1,4 @@
+
 'use client';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -49,9 +50,9 @@ const services = [
 ];
 
 const contactCards = [
-    { 
-        icon: FaShareAlt, 
-        title: "Connect With Us", 
+    {
+        icon: FaShareAlt,
+        title: "Connect With Us",
         content: (
             <div className="flex space-x-4">
               <a href="https://www.facebook.com/ChipukiziEntertainment" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><FaFacebook className="h-6 w-6"/></a>
@@ -184,7 +185,7 @@ export default function ContactPage() {
                         <FormField control={form.control} name="phone" render={({ field }) => ( <FormItem> <FormLabel>Phone Number</FormLabel> <FormControl> <Input placeholder="+254 712 345 678" {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                         <FormField control={form.control} name="organization" render={({ field }) => ( <FormItem> <FormLabel>Organization / Company</FormLabel> <FormControl> <Input placeholder="Your Company Inc." {...field} /> </FormControl> <FormMessage /> </FormItem> )} />
                     </div>
-                  
+
                     <FormField control={form.control} name="service" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Service Type *</FormLabel>
@@ -215,7 +216,11 @@ export default function ContactPage() {
                         <FormItem>
                             <FormLabel>Preferred Contact Method</FormLabel>
                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                     <SelectItem value="email">Email</SelectItem>
                                     <SelectItem value="phone">Phone</SelectItem>
@@ -228,7 +233,11 @@ export default function ContactPage() {
                         <FormItem>
                             <FormLabel>Preferred Time</FormLabel>
                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue/>
+                                  </SelectTrigger>
+                                </FormControl>
                                 <SelectContent>
                                     <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
                                     <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
