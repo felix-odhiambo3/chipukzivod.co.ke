@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import React from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,30 +65,85 @@ function EventsLoadingSkeleton() {
 export default function EventsPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
   const now = new Date().toISOString();
 
   const upcomingEventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Only fetch if user is logged in
+    if (!firestore || !user) return null;
     return query(
       collection(firestore, 'events'), 
       where('published', '==', true),
       where('startDatetime', '>=', now),
       orderBy('startDatetime', 'asc')
     );
-  }, [firestore, now]);
+  }, [firestore, user, now]);
 
   const pastEventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    // Only fetch if user is logged in
+    if (!firestore || !user) return null;
     return query(
       collection(firestore, 'events'), 
       where('published', '==', true),
       where('startDatetime', '<', now),
       orderBy('startDatetime', 'desc')
     );
-  }, [firestore, now]);
+  }, [firestore, user, now]);
 
   const { data: upcomingEvents, isLoading: isLoadingUpcoming } = useCollection<Event>(upcomingEventsQuery);
   const { data: pastEvents, isLoading: isLoadingPast } = useCollection<Event>(pastEventsQuery);
+
+  const isLoading = isUserLoading || isLoadingUpcoming || isLoadingPast;
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <EventsLoadingSkeleton />;
+    }
+    if (!user) {
+      return (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg mt-6">
+          <Sparkles className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium text-muted-foreground">Please log in to view events.</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Our events calendar is available to members.</p>
+          <Button asChild className="mt-6">
+            <Link href="/login">Login</Link>
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
+          <TabsTrigger value="past">Past Highlights</TabsTrigger>
+        </TabsList>
+        <TabsContent value="upcoming">
+            <div className="space-y-6 mt-6">
+              {upcomingEvents && upcomingEvents.length > 0 ? (
+                upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)
+              ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                  <Sparkles className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-medium text-muted-foreground">No Upcoming Events</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Check back soon for new events!</p>
+                </div>
+              )}
+            </div>
+        </TabsContent>
+        <TabsContent value="past">
+             <div className="space-y-6 mt-6">
+              {pastEvents && pastEvents.length > 0 ? (
+                pastEvents.map((event) => <EventCard key={event.id} event={event} />)
+              ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                  <p className="text-muted-foreground">No past events to show.</p>
+                </div>
+              )}
+            </div>
+        </TabsContent>
+      </Tabs>
+    );
+  }
 
   return (
     <div className="container py-12 md:py-16">
@@ -101,40 +156,7 @@ export default function EventsPage() {
       
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <Tabs defaultValue="upcoming" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
-              <TabsTrigger value="past">Past Highlights</TabsTrigger>
-            </TabsList>
-            <TabsContent value="upcoming">
-              {isLoadingUpcoming ? <EventsLoadingSkeleton /> : (
-                <div className="space-y-6 mt-6">
-                  {upcomingEvents && upcomingEvents.length > 0 ? (
-                    upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)
-                  ) : (
-                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                      <Sparkles className="mx-auto h-12 w-12 text-muted-foreground" />
-                      <h3 className="mt-4 text-lg font-medium text-muted-foreground">No Upcoming Events</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Check back soon for new events!</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-            <TabsContent value="past">
-               {isLoadingPast ? <EventsLoadingSkeleton /> : (
-                 <div className="space-y-6 mt-6">
-                  {pastEvents && pastEvents.length > 0 ? (
-                    pastEvents.map((event) => <EventCard key={event.id} event={event} />)
-                  ) : (
-                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                      <p className="text-muted-foreground">No past events to show.</p>
-                    </div>
-                  )}
-                </div>
-               )}
-            </TabsContent>
-          </Tabs>
+          {renderContent()}
         </div>
         <div className="md:col-span-1">
           <Card>
@@ -155,3 +177,5 @@ export default function EventsPage() {
     </div>
   );
 }
+
+    
