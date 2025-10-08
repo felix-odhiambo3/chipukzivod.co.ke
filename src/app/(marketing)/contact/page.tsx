@@ -225,7 +225,7 @@ export default function ContactPage() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Select a method..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -234,6 +234,7 @@ export default function ContactPage() {
                               <SelectItem value="whatsapp">WhatsApp</SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -246,7 +247,7 @@ export default function ContactPage() {
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Select a time..." />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -256,6 +257,7 @@ export default function ContactPage() {
                               <SelectItem value="anytime">Anytime</SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
@@ -287,5 +289,4 @@ export default function ContactPage() {
       </section>
     </div>
   );
-
-    
+}
