@@ -1,7 +1,11 @@
 
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FaBullseye, FaEye, FaVideo, FaBullhorn, FaUsers, FaStar, FaHandshake, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ArrowRight, Briefcase, Handshake, Lightbulb, Users, FaFacebook, FaTwitter, FaLinkedin, FaTiktok, FaYoutube, FaInstagram, Heart, Rss } from 'lucide-react';
+import { FaBullseye, FaEye, FaVideo, FaBullhorn, FaUsers as FaUsersIcon, FaStar, FaHandshake, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+
 
 const values = [
   { title: "Professionalism", description: "We deliver high-quality, respectful performances." },
@@ -14,7 +18,7 @@ const values = [
 const services = [
   { icon: FaVideo, title: "Video Production", description: "Professional video content creation for marketing, education, and entertainment purposes" },
   { icon: FaBullhorn, title: "Digital Marketing", description: "Strategic social media campaigns and brand promotion across multiple platforms" },
-  { icon: FaUsers, title: "Youth Training", description: "Skills development programs for unemployed youth in media production and marketing" },
+  { icon: FaUsersIcon, title: "Youth Training", description: "Skills development programs for unemployed youth in media production and marketing" },
   { icon: FaStar, title: "Talent Development", description: "Identifying and nurturing creative talent in drama, content creation, and digital arts" },
   { icon: FaHandshake, title: "Brand Partnerships", description: "Collaborative marketing solutions that benefit both brands and our creative community" },
   { icon: FaGraduationCap, title: "Educational Content", description: "Creating informative and inspiring content that educates and empowers communities" },
