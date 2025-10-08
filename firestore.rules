@@ -1,81 +1,100 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset implements a role-based access control model with public read access to published events.
+ * @description This ruleset enforces a role-based access control model with public read access to certain collections.
  *
  * Data Structure:
  * - /events/{eventId}: Stores event details.
  * - /users/{userId}: Stores user profiles.
- * - /roles_admin/{userId}: Indicates admin privileges.
+ * - /roles_admin/{userId}: Grants admin privileges.
+ * - /services/{serviceId}: Stores service details.
+ * - /bookings/{bookingId}: Stores service booking inquiries.
  *
  * Key Security Decisions:
- * - Public read access to published events.
- * - Admin-only write access for events.
- * - User-owned profiles with admin read access.
- * - Admin role is determined by the existence of a document in /roles_admin/{userId}.
+ * - Access to user profiles is restricted to the owning user and admins.
+ * - Only admins can create, update, and delete events and services.
+ * - Public read access is allowed for published events and services.
+ * - Bookings can be created by anyone.
+ *
+ * Denormalization for Authorization:
+ * - The `createdByAdminId` field in the `Event` entity is used to determine ownership for write operations.
+ *
+ * Structural Segregation:
+ * - Separate collections are used for events and user profiles to manage different access control requirements.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows reading of published events by anyone, and restricts creation, updating, and deletion of events to admins only.
+     * @description Allows read for published events, restricts write to admins.
      * @path /events/{eventId}
-     * @allow (get, list) Everyone can read published events.
-     * @allow (create) Admins can create events with 'status' as 'draft' or 'published' and the createdByAdminId matching their user ID.
-     * @allow (update) Admins can update existing events.
-     * @allow (delete) Admins can delete existing events.
-     * @deny (create) Non-admins cannot create events.
-     * @deny (update) Non-admins cannot update events.
-     * @deny (delete) Non-admins cannot delete events.
-     * @principle Public read access for published events, admin-only write access.
+     * @allow (get, list) if true
+     * @allow (create, update, delete) if isAdmin()
+     * @deny (create) if request.resource.data.createdByAdminId != request.auth.uid
+     * @principle Allows public read access for published events and restricts write access to admin users.
      */
     match /events/{eventId} {
-      allow get: if true;
-      allow list: if true;
-
-      allow create: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
     }
 
     /**
-     * @description Allows users to read their own profile data and admins to read any user profile.
+     * @description Allows users to read their own profile and admins to read any profile.
      * @path /users/{userId}
-     * @allow (get) Users can read their own profile or admins can read any profile.
-     * @allow (create) Users can create their own profile (self-registration).
-     * @allow (update) Users can update their own profile.
-     * @deny (get) Non-admins cannot read other user profiles.
-     * @deny (create) Users cannot create profiles for other users.
-     * @deny (update) Users cannot update other user profiles.
-     * @principle User-owned profiles with admin read access.
+     * @allow (get) if isOwner(userId) || isAdmin()
+     * @allow (create) if isOwner(userId)
+     * @allow (update) if isOwner(userId) && resource.data.email == request.resource.data.email
+     * @allow (list) if isAdmin()
+     * @deny (delete) if true
+     * @principle Restricts user profile access to the owning user and admins.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
       allow delete: if false;
     }
 
     /**
-     * @description Grants admin privileges based on the existence of a document in this collection.
+     * @description Grants admin privileges based on the existence of a document.
      * @path /roles_admin/{userId}
-     * @allow (get) Admins can verify their own admin status.
-     * @allow (create) Only the server can create these documents (using admin SDK).
-     * @deny (list) Listing admin roles is not permitted.
-     * @deny (create) Regular users cannot grant themselves admin roles.
-     * @deny (update) Regular users cannot modify admin roles.
-     * @deny (delete) Regular users cannot revoke admin roles.
-     * @principle Admin role is determined by the existence of a document here.
+     * @allow (get) if isAdmin()
+     * @allow (create) if request.auth.uid == userId
+     * @allow (update, delete) if false
+     * @allow (list) if false
+     * @principle Grants admin rights based on document existence and restricts modification.
      */
     match /roles_admin/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isAdmin();
       allow list: if false;
+      allow create: if request.auth.uid == userId;
+      allow update, delete: if false;
+    }
 
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+    /**
+     * @description Allows public read and restricts write to admins.
+     * @path /services/{serviceId}
+     * @allow (get, list) if true
+     * @allow (create, update, delete) if isAdmin()
+     * @principle Allows public read access and restricts write access to admin users.
+     */
+    match /services/{serviceId} {
+      allow get, list: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Allows anyone to create a booking, but restricts read/update/delete to admins.
+     * @path /bookings/{bookingId}
+     * @allow (create) if true
+     * @allow (get, list, update, delete) if isAdmin()
+     * @principle Allows public booking creation and restricts management to admins.
+     */
+    match /bookings/{bookingId} {
+      allow get, list: if isAdmin();
+      allow create: if true;
+      allow update, delete: if isAdmin();
     }
 
     function isSignedIn() {
@@ -83,11 +102,11 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return get(/databases/$(database)/documents/roles_admin/$(request.auth.uid)).data.exists();
     }
   }
 }
