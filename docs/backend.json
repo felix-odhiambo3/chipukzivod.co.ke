@@ -45,10 +45,11 @@
           "type": "string",
           "description": "The name of the organizer or host of the event."
         },
-        "published": {
-          "type": "boolean",
-          "description": "Indicates whether the event is published and visible to the public.",
-          "default": false
+        "status": {
+          "type": "string",
+          "description": "The visibility status of the event.",
+          "enum": ["published", "draft"],
+          "default": "draft"
         },
         "createdByAdminId": {
           "type": "string",
@@ -71,7 +72,7 @@
         "timezone",
         "eventType",
         "organizer",
-        "published",
+        "status",
         "createdByAdminId"
       ]
     },

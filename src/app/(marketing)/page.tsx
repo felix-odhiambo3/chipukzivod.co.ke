@@ -20,18 +20,16 @@ export default function HomePage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const firestore = useFirestore();
-  const now = new Date().toISOString();
 
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
-      where('published', '==', true),
-      where('startDatetime', '>=', now),
+      where('status', '==', "published"),
       orderBy('startDatetime', 'asc'),
       limit(3)
     );
-  }, [firestore, now]);
+  }, [firestore]);
 
   const { data: events, isLoading } = useCollection<Event>(eventsQuery);
 

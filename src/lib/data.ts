@@ -9,7 +9,7 @@ export type Event = {
     location?: string;
     imageUrl?: string;
     organizer: string;
-    published: boolean;
+    status: 'published' | 'draft';
     createdByAdminId: string;
     createdAt: string;
     updatedAt: string;

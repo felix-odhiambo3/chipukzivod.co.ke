@@ -71,7 +71,7 @@ export default function EventsPage() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
-      where('published', '==', true),
+      where('status', '==', "published"),
       where('startDatetime', '>=', now),
       orderBy('startDatetime', 'asc')
     );
@@ -81,7 +81,7 @@ export default function EventsPage() {
     if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
-      where('published', '==', true),
+      where('status', '==', "published"),
       where('startDatetime', '<', now),
       orderBy('startDatetime', 'desc')
     );

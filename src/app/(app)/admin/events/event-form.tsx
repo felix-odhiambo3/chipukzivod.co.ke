@@ -38,7 +38,7 @@ const formSchema = z.object({
   location: z.string().optional(),
   imageUrl: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
   organizer: z.string().min(1, 'Organizer is required.'),
-  published: z.boolean().default(false),
+  status: z.enum(['published', 'draft']).default('draft'),
 });
 
 type EventFormValues = z.infer<typeof formSchema>;
@@ -58,7 +58,7 @@ export function EventForm({ event }: EventFormProps) {
       startDatetime: new Date(event.startDatetime),
       endDatetime: new Date(event.endDatetime),
   } : {
-    published: false,
+    status: 'draft',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   };
 
@@ -263,13 +263,13 @@ export function EventForm({ event }: EventFormProps) {
                 </div>
                 <FormField
                     control={form.control}
-                    name="published"
+                    name="status"
                     render={({ field }) => (
                     <FormItem>
                         <FormControl>
                             <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
+                                checked={field.value === 'published'}
+                                onCheckedChange={(checked) => field.onChange(checked ? 'published' : 'draft')}
                             />
                         </FormControl>
                     </FormItem>

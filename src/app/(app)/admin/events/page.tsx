@@ -127,7 +127,7 @@ export default function ManageEventsPage() {
                                 <p className="text-sm text-muted-foreground line-clamp-3">{event.description}</p>
                             </CardContent>
                              <CardContent className="flex justify-between items-center">
-                                {event.published ? (
+                                {event.status === 'published' ? (
                                     <span className="flex items-center gap-1 text-sm text-green-600 font-medium">
                                         <Globe className="h-4 w-4" /> Published
                                     </span>
