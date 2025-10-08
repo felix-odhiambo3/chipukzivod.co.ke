@@ -26,6 +26,7 @@ import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-b
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Event } from '@/lib/data';
+import { Card, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long.'),
@@ -287,3 +288,5 @@ export function EventForm({ event }: EventFormProps) {
     </Card>
   );
 }
+
+    
