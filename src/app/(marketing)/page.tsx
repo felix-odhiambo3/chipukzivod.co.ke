@@ -54,32 +54,26 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative h-[60vh] md:h-[80vh] w-full flex items-center justify-center text-center text-white">
-          {heroImage && (
-            <Image
-              src="./images/second.svg"
-              alt={heroImage.description}
-              fill
-              className="object-cover"
-              priority
-              data-ai-hint={heroImage.imageHint}
-            />
-          )}
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative z-10 container">
-            <h1 className="text-4xl md:text-6xl font-extrabold font-headline leading-tight tracking-tight">
-              Chipukizi Voice Of Drama Cooperative Society
-            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-white/90">
-            Chipukizi VOD (Voice of Drama) Co-operative Society Limited is a youth-owned and run worker co-operative society registered under the Kenyan Co-operative Act. We promote brands and provide professional, customized entertainment that educates, informs, and inspires. We identify and train talented unemployed youth, polish their skills, and deliver meaningful content together as a team.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/services">View Services</Link>
-              </Button>
-              <Button asChild size="lg" variant="secondary">
-                <Link href="/contact">Contact Us</Link>
-              </Button>
+        <section
+          className="hero py-16"
+          style={{ backgroundImage: "url('/images/web.4.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}
+        >
+          <div className="hero-content max-w-4xl mx-auto text-center space-y-6 text-white-500">
+            <div className="bg-black/50 p-6 rounded-lg inline-block">
+              <h1 className="text-4xl font-bold mb-4">Chipukizi VOD Co-operative Society</h1>
+              <div className="hero-description mb-6">
+                <p>
+                  Chipukizi VOD (Voice of Drama) Co-operative Society Limited is a youth-owned and run worker co-operative society registered under the Kenyan Co-operative Act. We promote brands and provide professional, customized entertainment that educates, informs, and inspires. We identify and train talented unemployed youth, polish their skills, and deliver meaningful content together as a team.
+                </p>
+              </div>
+            </div>
+            {/* Call-to-Action Buttons */}
+            <div className="cta-buttons flex flex-wrap gap-4 justify-center">
+              <Link href="/login" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">Join Us</Link>
+              <Link href="#partner" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">Partner With Us</Link>
+              <Link href="/services" className="cta-btn tertiary bg-gray-100 text-purple-700 px-6 py-2 rounded font-bold shadow hover:bg-purple-200">View Services</Link>
+              <Link href="/booknow" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">Book Now</Link>
+              <Link href="/contact" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">Contact Us</Link>
             </div>
           </div>
         </section>
