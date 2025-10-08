@@ -1,4 +1,3 @@
-
 'use client';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -101,7 +100,7 @@ export default function ContactPage() {
 
     try {
       const contactsCollection = collection(firestore, 'contacts');
-      await addDocumentNonBlocking(contactsCollection, contactData);
+      addDocumentNonBlocking(contactsCollection, contactData);
       toast({
         title: "Message Sent!",
         description: "Thank you for your inquiry. We will get back to you shortly.",
@@ -222,18 +221,18 @@ export default function ContactPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Preferred Contact Method</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a method..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="email">Email</SelectItem>
-                              <SelectItem value="phone">Phone</SelectItem>
-                              <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a method..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="email">Email</SelectItem>
+                                <SelectItem value="phone">Phone</SelectItem>
+                                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                              </SelectContent>
+                            </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -244,19 +243,19 @@ export default function ContactPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Preferred Time</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a time..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
-                              <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
-                              <SelectItem value="evening">Evening (5pm-7pm)</SelectItem>
-                              <SelectItem value="anytime">Anytime</SelectItem>
-                            </SelectContent>
-                          </Select>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a time..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="morning">Morning (8am-12pm)</SelectItem>
+                                <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
+                                <SelectItem value="evening">Evening (5pm-7pm)</SelectItem>
+                                <SelectItem value="anytime">Anytime</SelectItem>
+                              </SelectContent>
+                            </Select>
                           <FormMessage />
                         </FormItem>
                       )}
