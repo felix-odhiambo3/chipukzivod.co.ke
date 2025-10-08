@@ -27,7 +27,7 @@ import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { FaBullhorn, FaUsers, FaStar, FaVideo, FaShareAlt, FaMapMarkerAlt, FaPhone, FaClock, FaEnvelope, FaCertificate, FaFacebook, FaYoutube, FaTiktok, FaInstagram } from "react-icons/fa";
 import Link from "next/link";
-import { PaperPlaneIcon } from "@radix-ui/react-icons";
+import { Send } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -242,7 +242,7 @@ export default function ContactPage() {
 
                   <div className="text-center">
                     <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-                      {form.formState.isSubmitting ? "Sending..." : <> <PaperPlaneIcon className="mr-2 h-4 w-4" /> Send Message</>}
+                      {form.formState.isSubmitting ? "Sending..." : <> <Send className="mr-2 h-4 w-4" /> Send Message</>}
                     </Button>
                   </div>
                 </form>
