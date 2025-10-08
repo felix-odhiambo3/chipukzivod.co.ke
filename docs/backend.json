@@ -186,6 +186,25 @@
         }
       },
       "required": ["name", "email", "serviceId", "serviceTitle", "message", "status"]
+    },
+    "ContactInquiry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Contact Inquiry",
+      "description": "Represents a submission from the contact form.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "organization": { "type": "string" },
+        "service": { "type": "string" },
+        "message": { "type": "string" },
+        "contactMethod": { "type": "string" },
+        "preferredTime": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "responded"], "default": "pending" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "service", "message", "status"]
     }
   },
   "auth": {
@@ -243,6 +262,16 @@
             "$ref": "#/entities/Booking"
           },
           "description": "Stores service booking inquiries. Public can create, admins can read/update."
+        }
+      },
+      {
+        "path": "/contacts/{contactId}",
+        "definition": {
+          "entityName": "ContactInquiry",
+          "schema": {
+            "$ref": "#/entities/ContactInquiry"
+          },
+          "description": "Stores contact form submissions. Public can create, admins can read/update."
         }
       }
     ]

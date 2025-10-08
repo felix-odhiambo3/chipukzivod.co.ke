@@ -35,3 +35,17 @@ export type Booking = {
     status: 'pending' | 'contacted';
     createdAt: string;
 };
+
+export type ContactInquiry = {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    organization?: string;
+    service: string;
+    message: string;
+    contactMethod: string;
+    preferredTime: string;
+    status: 'pending' | 'responded';
+    createdAt: string;
+};
