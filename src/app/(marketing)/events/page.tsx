@@ -1,22 +1,94 @@
 'use client';
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { events as staticEvents } from "@/lib/data";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import React from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import type { Event } from '@/lib/data';
+import { Skeleton } from "@/components/ui/skeleton";
 
-// In the future, this data will come from Firestore
-const events = staticEvents.map(e => ({...e, date: new Date(e.date)}));
+function EventCard({ event }: { event: Event & { id: string } }) {
+  return (
+    <Card key={event.id} className="overflow-hidden flex flex-col sm:flex-row">
+      {event.imageUrl && 
+        <div className="w-full sm:w-1/3 relative h-48 sm:h-auto">
+          <Image src={event.imageUrl} alt={event.title} fill style={{objectFit: 'cover'}} data-ai-hint="event photo"/>
+        </div>
+      }
+      <div className="w-full sm:w-2/3 flex flex-col">
+        <CardHeader>
+          <CardTitle>{event.title}</CardTitle>
+          <CardDescription>{new Date(event.startDatetime).toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', timeZoneName: 'short' })}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow">
+          <p className="text-sm text-muted-foreground line-clamp-3">{event.description}</p>
+        </CardContent>
+        <CardContent>
+          <Button asChild variant="link" className="px-0 mt-2">
+            <Link href={`/events/${event.id}`}>Learn More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+          </Button>
+        </CardContent>
+      </div>
+    </Card>
+  );
+}
+
+function EventsLoadingSkeleton() {
+    return (
+        <div className="space-y-6 mt-6">
+            {[...Array(3)].map((_, i) => (
+                <Card key={i} className="overflow-hidden flex flex-col sm:flex-row">
+                    <div className="w-full sm:w-1/3 relative h-48 sm:h-auto">
+                        <Skeleton className="h-full w-full" />
+                    </div>
+                    <div className="w-full sm:w-2/3">
+                        <CardHeader>
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2 mt-2" />
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-5/6" />
+                        </CardContent>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    );
+}
 
 export default function EventsPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
-  
-  const upcomingEvents = events.filter(e => e.date >= new Date());
-  const pastEvents = events.filter(e => e.date < new Date());
+  const firestore = useFirestore();
+  const now = new Date().toISOString();
+
+  const upcomingEventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'events'), 
+      where('published', '==', true),
+      where('startDatetime', '>=', now),
+      orderBy('startDatetime', 'asc')
+    );
+  }, [firestore, now]);
+
+  const pastEventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'events'), 
+      where('published', '==', true),
+      where('startDatetime', '<', now),
+      orderBy('startDatetime', 'desc')
+    );
+  }, [firestore, now]);
+
+  const { data: upcomingEvents, isLoading: isLoadingUpcoming } = useCollection<Event>(upcomingEventsQuery);
+  const { data: pastEvents, isLoading: isLoadingPast } = useCollection<Event>(pastEventsQuery);
 
   return (
     <div className="container py-12 md:py-16">
@@ -35,62 +107,32 @@ export default function EventsPage() {
               <TabsTrigger value="past">Past Highlights</TabsTrigger>
             </TabsList>
             <TabsContent value="upcoming">
-              <div className="space-y-6 mt-6">
-                {upcomingEvents.length > 0 ? (
-                  upcomingEvents.map((event) => (
-                    <Card key={event.title} className="overflow-hidden flex flex-col sm:flex-row">
-                      {event.image && event.image.imageUrl && 
-                        <div className="w-full sm:w-1/3">
-                          <Image src={event.image.imageUrl} alt={event.title} width={400} height={250} className="w-full h-full object-cover" data-ai-hint={event.image.imageHint}/>
-                        </div>
-                      }
-                      <div className="w-full sm:w-2/3">
-                        <CardHeader>
-                          <CardTitle>{event.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{event.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' })}</p>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground line-clamp-3">{event.description}</p>
-                           <Button asChild variant="link" className="px-0 mt-2">
-                            <Link href={`/events/${event.title.toLowerCase().replace(/ /g, '-')}`}>Learn More <ArrowRight className="ml-1 h-4 w-4" /></Link>
-                          </Button>
-                        </CardContent>
-                      </div>
-                    </Card>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No upcoming events. Check back soon!</p>
-                )}
-              </div>
+              {isLoadingUpcoming ? <EventsLoadingSkeleton /> : (
+                <div className="space-y-6 mt-6">
+                  {upcomingEvents && upcomingEvents.length > 0 ? (
+                    upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)
+                  ) : (
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                      <Sparkles className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <h3 className="mt-4 text-lg font-medium text-muted-foreground">No Upcoming Events</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">Check back soon for new events!</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="past">
-               <div className="space-y-6 mt-6">
-                {pastEvents.length > 0 ? (
-                  pastEvents.map((event) => (
-                    <Card key={event.title} className="overflow-hidden flex flex-col sm:flex-row">
-                       {event.image && event.image.imageUrl && 
-                        <div className="w-full sm:w-1/3">
-                          <Image src={event.image.imageUrl} alt={event.title} width={400} height={250} className="w-full h-full object-cover" data-ai-hint={event.image.imageHint}/>
-                        </div>
-                       }
-                      <div className="w-full sm:w-2/3">
-                        <CardHeader>
-                          <CardTitle>{event.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{event.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground line-clamp-3">{event.description}</p>
-                           <Button asChild variant="link" className="px-0 mt-2">
-                            <Link href={`/events/${event.title.toLowerCase().replace(/ /g, '-')}`}>View Gallery <ArrowRight className="ml-1 h-4 w-4" /></Link>
-                          </Button>
-                        </CardContent>
-                      </div>
-                    </Card>
-                  ))
-                 ) : (
-                  <p className="text-muted-foreground text-center py-8">No past events to show.</p>
-                )}
-              </div>
+               {isLoadingPast ? <EventsLoadingSkeleton /> : (
+                 <div className="space-y-6 mt-6">
+                  {pastEvents && pastEvents.length > 0 ? (
+                    pastEvents.map((event) => <EventCard key={event.id} event={event} />)
+                  ) : (
+                    <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                      <p className="text-muted-foreground">No past events to show.</p>
+                    </div>
+                  )}
+                </div>
+               )}
             </TabsContent>
           </Tabs>
         </div>

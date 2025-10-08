@@ -5,17 +5,35 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { events } from '@/lib/data';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy, limit } from 'firebase/firestore';
+import type { Event } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const heroImage = PlaceHolderImages.find(img => img.id === 'hero');
 const partnerLogos = PlaceHolderImages.filter(img => img.id.startsWith('partner'));
 
 export default function HomePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const firestore = useFirestore();
+  const now = new Date().toISOString();
+
+  const eventsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'events'), 
+      where('published', '==', true),
+      where('startDatetime', '>=', now),
+      orderBy('startDatetime', 'asc'),
+      limit(3)
+    );
+  }, [firestore, now]);
+
+  const { data: events, isLoading } = useCollection<Event>(eventsQuery);
 
   const eventsSlider = [
     {
@@ -80,36 +98,32 @@ export default function HomePage() {
 
         <section className="welcome-events-section py-16 bg-white max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 items-start">
-            
-
-
             {/* Welcome */}
-<div className="welcome-box bg-gray-100 p-6 rounded-lg shadow-md">
-  <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-    Welcome Message
-  </h2>
-  <div className="text-gray-700 text-sm leading-relaxed">
-    <img
-      src="/images/chairperson.jpg"
-      alt="Chairperson"
-      className="rounded-md w-40 h-48 object-cover float-left mr-4 mb-2"
-    />
-    <p>
-      I am delighted to extend a warm welcome to you on behalf of Chipukizi VOD Cooperative Society, a premier platform dedicated to empowering upcoming talented individuals and fostering creative excellence in the digital marketing landscape.
-    </p>
-    <p>
-      At Chipukizi VOD, we recognize the importance of nurturing creativity and innovation in today's competitive digital world. Our state-of-the-art video production facilities, cutting-edge marketing strategies, and industry-relevant services ensure that our clients and partners receive comprehensive support that aligns with the demands of the modern marketplace.
-    </p>
-    <p>
-      We specialize in marketing products through engaging video clips and strategic social media campaigns, helping businesses reach their target audiences effectively while providing opportunities for talented individuals to showcase their skills.
-    </p>
-    <p>
-      <strong>John Njuguna Maina</strong>
-    </p>
-    <p className="text-sm">Chairperson</p>
-  </div>
-</div>
-
+            <div className="welcome-box bg-gray-100 p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+                Welcome Message
+              </h2>
+              <div className="text-gray-700 text-sm leading-relaxed">
+                <img
+                  src="/images/chairperson.jpg"
+                  alt="Chairperson"
+                  className="rounded-md w-40 h-48 object-cover float-left mr-4 mb-2"
+                />
+                <p>
+                  I am delighted to extend a warm welcome to you on behalf of Chipukizi VOD Cooperative Society, a premier platform dedicated to empowering upcoming talented individuals and fostering creative excellence in the digital marketing landscape.
+                </p>
+                <p>
+                  At Chipukizi VOD, we recognize the importance of nurturing creativity and innovation in today's competitive digital world. Our state-of-the-art video production facilities, cutting-edge marketing strategies, and industry-relevant services ensure that our clients and partners receive comprehensive support that aligns with the demands of the modern marketplace.
+                </p>
+                <p>
+                  We specialize in marketing products through engaging video clips and strategic social media campaigns, helping businesses reach their target audiences effectively while providing opportunities for talented individuals to showcase their skills.
+                </p>
+                <p>
+                  <strong>John Njuguna Maina</strong>
+                </p>
+                <p className="text-sm">Chairperson</p>
+              </div>
+            </div>
 
             {/* Events Slider */}
             <div
@@ -157,31 +171,44 @@ export default function HomePage() {
           </div>
         </section>
 
-
-        
-
         {/* Latest Updates Section */}
         <section className="py-16 lg:py-24">
           <div className="container">
             <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Updates & Events</h2>
             <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Stay up to date with our latest news, workshops, and community highlights.</p>
             <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {events.slice(0, 3).map((event) => (
-                <Card key={event.title} className="overflow-hidden">
-                  {event.image && event.image.imageUrl && <Image src={event.image.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint={event.image.imageHint}/>}
+              {isLoading && [...Array(3)].map((_, i) => (
+                <Card key={i}>
+                  <Skeleton className="h-48 w-full"/>
                   <CardHeader>
-                    <CardTitle>{event.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2 mt-2" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{event.description}</p>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6 mt-2" />
+                  </CardContent>
+                </Card>
+              ))}
+              {!isLoading && events && events.map((event) => (
+                <Card key={event.id} className="overflow-hidden">
+                  {event.imageUrl && <Image src={event.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint="event photo"/>}
+                  <CardHeader>
+                    <CardTitle>{event.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{new Date(event.startDatetime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
                     <Button asChild variant="link" className="px-0 mt-2">
-                        <Link href="/events">Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                        <Link href={`/events/${event.id}`}>Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
                     </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
+            {!isLoading && events?.length === 0 && (
+              <p className="text-center text-muted-foreground mt-12">No upcoming events right now. Check back soon!</p>
+            )}
           </div>
         </section>
 
@@ -204,7 +231,7 @@ export default function HomePage() {
         </section>
 
         {/* Partner Logos */}
-        <section className="py-16">
+        <section className="py-16" id="partner">
           <div className="container">
             <h2 className="text-center text-xl font-semibold text-muted-foreground">Trusted by visionary partners</h2>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-8">

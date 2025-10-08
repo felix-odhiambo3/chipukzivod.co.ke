@@ -1,48 +1,37 @@
-import { PlaceHolderImages } from './placeholder-images';
-
-const findImage = (id: string) => PlaceHolderImages.find(img => img.id === id);
-
-export const events = [
-  {
-    id: "annual-general-meeting",
-    title: 'Annual General Meeting',
-    date: '2024-08-15T10:00:00Z',
-    description: 'Join us for our annual general meeting to discuss the future of our cooperative.',
-    image: findImage('event1'),
-    type: 'upcoming'
-  },
-  {
-    id: "digital-storytelling-workshop",
-    title: 'Digital Storytelling Workshop',
-    date: '2024-09-05T14:00:00Z',
-    description: 'Learn the art of digital storytelling from industry experts. Limited slots available.',
-    image: findImage('event2'),
-    type: 'upcoming'
-  },
-  {
-    id: "chipukizi-film-festival",
-    title: 'Chipukizi Film Festival',
-    date: '2024-07-20T18:00:00Z',
-    description: 'A showcase of the best films produced by our members over the past year.',
-    image: findImage('event3'),
-    type: 'past'
-  }
-];
+export type Event = {
+    id: string;
+    title: string;
+    description: string;
+    startDatetime: string;
+    endDatetime: string;
+    timezone: string;
+    eventType: string;
+    location?: string;
+    imageUrl?: string;
+    organizer: string;
+    published: boolean;
+    createdByAdminId: string;
+    createdAt: string;
+    updatedAt: string;
+};
 
 export const services = [
     {
       title: "Video Production",
       description: "High-quality video production services for corporate clients, events, and marketing campaigns.",
-      image: findImage('service1'),
+      imageUrl: "https://picsum.photos/seed/service1/400/300",
+      imageHint: "video production"
     },
     {
       title: "Professional Photography",
       description: "Capture your most important moments with our professional photography services.",
-      image: findImage('service2'),
+      imageUrl: "https://picsum.photos/seed/service2/400/300",
+      imageHint: "photography session"
     },
     {
       title: "Live Streaming",
       description: "Broadcast your events to a wider audience with our reliable live streaming solutions.",
-      image: findImage('service3'),
+      imageUrl: "https://picsum.photos/seed/service3/400/300",
+      imageHint: "live streaming"
     }
 ];

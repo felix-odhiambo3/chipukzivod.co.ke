@@ -1,82 +1,33 @@
 /**
- * @file Firestore Security Rules for Chipukizi Hub
+ * @fileOverview Firestore Security Rules for Chipukizi Hub.
  *
- * @core_philosophy This ruleset enforces a role-based access control system where administrators can create, update, and delete events.
- * Users can only view published events. User profiles are private and only accessible to the user themselves and admins. Admin privileges
- * are determined by the existence of a document in the `/roles_admin/{uid}` collection.
+ * Core Philosophy:
+ * This ruleset implements a hybrid security model, combining role-based access control (for admins) with user-based ownership. It ensures that users can only manage their own profiles, while admins have broader privileges, especially concerning event management. Published events are publicly readable, but all writes require appropriate authorization.
  *
- * @data_structure
- * - `/events/{eventId}`: Stores event data, including metadata like `createdByAdminId` and `published`.
- * - `/users/{userId}`: Stores user profile data.
- * - `/roles_admin/{uid}`: Indicates admin privileges; document existence grants admin rights.
+ * Data Structure:
+ * - /events/{eventId}: Stores event details, including a 'published' flag for public read access and 'createdByAdminId' to restrict write access to the creating admin.
+ * - /users/{userId}: Stores user profile information. Access is restricted to the user themselves (ownership).
+ * - /roles_admin/{uid}: A collection used to grant admin privileges. The *existence* of a document under this path indicates admin status.
  *
- * @key_security_decisions
- * - Events have a `published` field to control visibility.
- * - Only admins (users with a document in `/roles_admin/{uid}`) can create, update, or delete events.
- * - Users can only read their own profile data in `/users/{userId}`.
- * - Listing all users is disallowed.
+ * Key Security Decisions:
+ * - Public Read Access for Published Events: Events marked as 'published' are readable by anyone.
+ * - Admin-Only Event Creation/Modification: Only users with admin privileges (indicated by a document in `/roles_admin/{uid}`) can create, update, or delete events.
+ * - User Profile Ownership: Users can only read and modify their own profile data.
+ * - Denormalization for Authorization: The `createdByAdminId` field in the `/events/{eventId}` collection is crucial for authorization. It avoids the need for costly `get()` operations to verify admin ownership.
+ * - Structural Segregation: The 'published' flag in the `/events/{eventId}` collection allows for efficient public listing of published events without exposing unpublished events.
  *
- * @denormalization_for_authorization
- * - Events store the `createdByAdminId` to allow event modifications to be checked against the creating admin without additional reads.
+ * Denormalization for Authorization:
+ *   - The `createdByAdminId` field is denormalized into the `events` collection to allow event write operations to be authorized via `isEventCreator(eventId)` without needing to read user documents.
+ *
+ * Structural Segregation:
+ *   - The `published` field is used to make events publicly visible, but restricts write access based on the `createdByAdminId` and admin privileges.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the /events/{eventId} collection.
-     * @path /events/{eventId}
-     * @allow (get, list): Any user can read published events.
-     * @allow (create): Only admins can create events, and the 'createdByAdminId' must match their UID.
-     * @allow (update, delete): Only the admin who created the event can modify or delete it.
-     * @deny (create): Non-admins cannot create events.
-     * @deny (update, delete): Non-admins cannot modify or delete events.
-     * @principle Public Read with Owner-Only Writes, Role-Based Access Control
-     */
-    match /events/{eventId} {
-      // Allow anyone to read published events.
-      allow get: if true;
-      allow list: if true;
-
-      // Only admins can create, update, or delete events.
-      allow create: if isSignedIn() && isAdmin() && request.resource.data.createdByAdminId == request.auth.uid;
-      allow update: if isSignedIn() && isAdmin() && isExistingOwner(resource.data.createdByAdminId);
-      allow delete: if isSignedIn() && isAdmin() && isExistingOwner(resource.data.createdByAdminId);
-    }
-
-    /**
-     * @description Controls access to the /users/{userId} collection.
-     * @path /users/{userId}
-     * @allow (get): Only the user themselves or an admin can read the profile.
-     * @allow (create): A user can create their own profile if the userId matches their auth UID.
-     * @allow (update): Only the user themselves or an admin can modify the profile.
-     * @allow (delete): Only the user themselves or an admin can delete the profile.
-     * @deny (list): Listing all users is not allowed.
-     * @principle Ownership, Role-Based Access Control
-     */
-    match /users/{userId} {
-      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
-      allow update: if isSignedIn() && (isOwner(userId) || isAdmin()) && request.resource.data.id == resource.data.id;
-      allow delete: if isSignedIn() && (isOwner(userId) || isAdmin());
-    }
-
-    /**
-     * @description Controls access to the /roles_admin/{uid} collection, which manages admin privileges.
-     * @path /roles_admin/{uid}
-     * @allow (get, list, create, update, delete): Only admins can manage admin roles (document existence).
-     * @principle Role-Based Access Control
-     */
-    match /roles_admin/{uid} {
-      // Only existing admins can manage admin roles. This prevents privilege escalation.
-      allow get, list, create, update, delete: if isSignedIn() && isAdmin();
-    }
-
-    // --- Helper functions ---
-
-    /**
-     * @description Checks if the user is signed in.
+     * @description Checks if a user is signed in.
      * @return {boolean} True if the user is signed in, false otherwise.
      */
     function isSignedIn() {
@@ -84,30 +35,112 @@ service cloud.firestore {
     }
 
     /**
-     * @description Checks if the user is the owner of the resource based on the provided user ID.
-     * @param {string} userId - The user ID to compare against the authenticated user's UID.
+     * @description Checks if the authenticated user is the owner of the resource (based on user ID in the path).
+     * @param {string} userId The user ID from the path.
      * @return {boolean} True if the user is the owner, false otherwise.
-     * @example isOwner('user123') returns true if request.auth.uid == 'user123'.
      */
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the user is an administrator by verifying the existence of a document in the /roles_admin/{uid} collection.
+     * @description Checks if the authenticated user is an existing owner of the resource (based on user ID in the path and resource existence).
+     * @param {string} userId The user ID from the path.
+     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Checks if the authenticated user is the creator of the event.
+     * @param {string} createdByAdminId The creator ID from the document.
+     * @return {boolean} True if the user is the creator, false otherwise.
+     */
+    function isEventCreator(createdByAdminId) {
+      return isSignedIn() && request.auth.uid == createdByAdminId;
+    }
+
+    /**
+     * @description Checks if the authenticated user is an existing creator of the event.
+     * @param {string} createdByAdminId The creator ID from the document.
+     * @return {boolean} True if the user is the creator and the resource exists, false otherwise.
+     */
+    function isExistingEventCreator(createdByAdminId) {
+      return isEventCreator(createdByAdminId) && resource != null;
+    }
+
+
+    /**
+     * @description Checks if the authenticated user is an admin by verifying the existence of a document in `/roles_admin/{uid}`.
      * @return {boolean} True if the user is an admin, false otherwise.
      */
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     /**
-     * @description Checks if the user is the existing owner of the resource. Combines ownership check with resource existence.
-     * @param {string} userId - The user ID to compare against the authenticated user's UID.
-     * @return {boolean} True if the user is the existing owner, false otherwise.
+     * @description Rules for the /events/{eventId} collection.
+     * @path /events/{eventId}
+     * @allow (get, list) Public read access for published events.
+     * @allow (create) Admin can create an event if request.resource.data.createdByAdminId matches their UID.
+     * @allow (update, delete) Admin can update/delete an event if they created it and the event exists.
+     * @deny (create) Non-admin users cannot create events.
+     * @deny (update, delete) Non-admin users cannot update/delete events.
+     * @principle Allows public read access to published events and restricts write access to admins who created the event.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    match /events/{eventId} {
+      allow get: if true;
+      allow list: if true;
+
+      allow create: if isAdmin() && request.resource.data.createdByAdminId == request.auth.uid;
+      allow update: if isExistingEventCreator(resource.data.createdByAdminId);
+      allow delete: if isExistingEventCreator(resource.data.createdByAdminId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId} collection.
+     * @path /users/{userId}
+     * @allow (get) User can get their own profile.
+     * @allow (list) User can list their own profile.
+     * @allow (create) User can create their own profile if their auth UID matches the userId.
+     * @allow (update) User can update their own profile if it exists.
+     * @allow (delete) User can delete their own profile if it exists.
+     * @deny (get, list) User cannot get/list other user's profiles.
+     * @deny (create) User cannot create a profile with a different userId.
+     * @principle Enforces user-ownership model; only the authenticated user can manage their profile.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /roles_admin/{uid} collection.
+     * @path /roles_admin/{uid}
+     * @allow (get) Admin can get another admin user doc.
+     * @allow (list) Admin can list another admin user doc.
+     * @allow (create) Only a server environment can create an admin document.
+     * @allow (update) Updating an admin document is not allowed.
+     * @allow (delete) Only a server environment can delete an admin document.
+     * @deny (get) Non-admin cannot get an admin document.
+     * @deny (list) Non-admin cannot list admin document.
+     * @deny (create) Non-admin cannot create an admin document.
+     * @deny (update) Non-admin cannot update an admin document.
+     * @deny (delete) Non-admin cannot delete an admin document.
+     * @principle Restricts creation and deletion of admin roles to a secure backend environment. Read access is public.
+     */
+    match /roles_admin/{uid} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }

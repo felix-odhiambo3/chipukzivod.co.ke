@@ -6,10 +6,6 @@
       "type": "object",
       "description": "Represents an event in the Chipukizi Hub system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Event entity."
-        },
         "title": {
           "type": "string",
           "description": "The title of the event."
@@ -20,56 +16,54 @@
         },
         "startDatetime": {
           "type": "string",
-          "description": "The date and time when the event starts.",
+          "description": "The date and time when the event starts, in ISO 8601 format.",
           "format": "date-time"
         },
         "endDatetime": {
           "type": "string",
-          "description": "The date and time when the event ends.",
+          "description": "The date and time when the event ends, in ISO 8601 format.",
           "format": "date-time"
         },
         "timezone": {
           "type": "string",
-          "description": "The timezone in which the event takes place."
+          "description": "The timezone in which the event takes place (e.g., 'Africa/Nairobi')."
         },
         "eventType": {
           "type": "string",
-          "description": "The type or category of the event."
+          "description": "The type or category of the event (e.g., 'Workshop', 'Meeting')."
         },
         "location": {
           "type": "string",
-          "description": "The location where the event is held. (Optional)"
+          "description": "The physical location or online URL for the event."
         },
         "imageUrl": {
           "type": "string",
-          "description": "URL of the image or poster for the event. (Optional)",
+          "description": "URL of an image or poster for the event.",
           "format": "uri"
         },
         "organizer": {
           "type": "string",
-          "description": "The organizer or host of the event."
+          "description": "The name of the organizer or host of the event."
         },
         "published": {
           "type": "boolean",
-          "description": "Indicates whether the event is published and visible to the public."
+          "description": "Indicates whether the event is published and visible to the public.",
+          "default": false
         },
         "createdByAdminId": {
           "type": "string",
-          "description": "Reference to User. The ID of the admin user who created the event. (Relationship: User 1:N Event)"
+          "description": "The ID of the admin user who created the event. Foreign key to a User document."
         },
         "createdAt": {
           "type": "string",
-          "description": "The date and time when the event was created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "The date and time when the event was last updated.",
           "format": "date-time"
         }
       },
       "required": [
-        "id",
         "title",
         "description",
         "startDatetime",
@@ -78,9 +72,7 @@
         "eventType",
         "organizer",
         "published",
-        "createdByAdminId",
-        "createdAt",
-        "updatedAt"
+        "createdByAdminId"
       ]
     },
     "User": {
@@ -89,36 +81,48 @@
       "type": "object",
       "description": "Represents a user in the Chipukizi Hub system.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
-        },
-        "username": {
-          "type": "string",
-          "description": "The username of the user."
-        },
         "email": {
           "type": "string",
           "description": "The email address of the user.",
           "format": "email"
         },
+        "displayName": {
+          "type": "string",
+          "description": "The display name of the user."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "The URL of the user's profile picture.",
+          "format": "uri"
+        },
         "role": {
           "type": "string",
-          "description": "The role of the user (e.g., admin, editor, member)."
+          "description": "The role of the user.",
+          "enum": ["admin", "member"]
         }
       },
       "required": [
-        "id",
-        "username",
         "email",
         "role"
       ]
+    },
+    "AdminRole": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminRole",
+      "type": "object",
+      "description": "A document indicating a user has admin privileges. The existence of a document at /roles_admin/{uid} grants admin rights.",
+      "properties": {
+        "isAdmin": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": ["isAdmin"]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -128,15 +132,9 @@
         "definition": {
           "entityName": "Event",
           "schema": {
-            "$ref": "#/backend/entities/Event"
+            "$ref": "#/entities/Event"
           },
-          "description": "Stores event details. Includes denormalized 'createdByAdminId' for authorization independence, enabling event creation/modification restricted to the creating admin. Also includes 'published' field to allow public read access to published events and restricted access to unpublished ones.",
-          "params": [
-            {
-              "name": "eventId",
-              "description": "Unique identifier for the event."
-            }
-          ]
+          "description": "Stores event details. Public read access is granted for published events. Write access is restricted to admins."
         }
       },
       {
@@ -144,34 +142,21 @@
         "definition": {
           "entityName": "User",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/entities/User"
           },
-          "description": "Stores user profiles. Path-based ownership ensures only the user or an admin can modify the profile. User 'role' is stored here, in addition to the admin role check in `/roles_admin/{uid}`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "Unique identifier for the user."
-            }
-          ]
+          "description": "Stores user profiles. Users can read their own profile, and admins can read any profile."
         }
       },
       {
-        "path": "/roles_admin/{uid}",
+        "path": "/roles_admin/{userId}",
         "definition": {
           "entityName": "AdminRole",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/entities/AdminRole"
           },
-          "description": "Indicates admin privileges. Existence of a document at this path grants admin rights. Authorization is based on document existence rather than content. This is checked in rules using `exists()`.",
-          "params": [
-            {
-              "name": "uid",
-              "description": "User ID of the administrator."
-            }
-          ]
+          "description": "Grants admin privileges. The existence of a document here makes a user an admin."
         }
       }
-    ],
-    "reasoning": "This Firestore structure is designed to support the Chipukizi Hub application, focusing on events, user management, and content. It prioritizes Authorization Independence via Denormalization and Structural Segregation to facilitate secure and scalable operations. The structure is optimized for the specific requirements outlined, including real-time updates, event listings, and admin control.\n\n**Authorization Independence:** The structure leverages denormalization to ensure authorization can be performed at the document level without requiring `get()` calls to parent documents. For example, the `createdByAdminId` field is included in the `/events/{eventId}` collection, enabling rules to verify admin ownership without needing to read the associated user document.\n\n**QAPs (Rules are Not Filters):** The structure enables secure `list` operations by segregating data based on access requirements. Publicly visible events are stored in `/events` with a `published` boolean. Admin-only operations, such as creating or editing events, are controlled via the `createdByAdminId` field, ensuring only authorized users can modify event data. User-specific data, like profile information, is stored under `/users/{userId}`, providing path-based ownership.\n\nThe membership model is implemented via a dedicated `/roles_admin/{uid}` collection where the existence of a document indicates admin role, enabling secure role based access control.\n"
+    ]
   }
 }
