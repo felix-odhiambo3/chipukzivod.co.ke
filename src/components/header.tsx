@@ -16,25 +16,27 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center">
-        <Logo />
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium ml-8">
+        <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Logo />
+        </Link>
+        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
           {navLinks.map(({ href, label }) => (
             <Link key={label} href={href} className="transition-colors hover:text-primary">
               {label}
             </Link>
           ))}
         </nav>
-        <div className="flex flex-1 items-center justify-end space-x-4">
-          <Link href="/login" passHref legacyBehavior>
-            <Button variant="ghost">Member Login</Button>
-          </Link>
-          <Link href="/dashboard" passHref legacyBehavior>
-            <Button>Go to Dashboard</Button>
-          </Link>
+        <div className="flex flex-1 items-center justify-end space-x-2">
+          <Button asChild variant="ghost">
+            <Link href="/login">Member Login</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard">Go to Dashboard</Link>
+          </Button>
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="outline" size="icon">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
