@@ -11,14 +11,22 @@ import {
   SidebarTrigger,
   SidebarFooter,
   useSidebar,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut } from "lucide-react";
+import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import React from "react";
 import { usePathname } from "next/navigation";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -45,6 +53,7 @@ function AppSidebar() {
   };
 
   const isActive = (href: string) => pathname === href;
+  const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
 
   return (
     <Sidebar>
@@ -57,18 +66,38 @@ function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {memberNavItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton isActive={isActive(item.href)} tooltip={item.tooltip}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                  {item.badge && <span className="ml-auto bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-full">{item.badge}</span>}
+          <SidebarMenuItem>
+             <Link href="/dashboard" legacyBehavior passHref>
+                <SidebarMenuButton isActive={isActive("/dashboard")} tooltip="Dashboard">
+                  <LayoutDashboard />
+                  <span>Dashboard</span>
                 </SidebarMenuButton>
               </Link>
-            </SidebarMenuItem>
-          ))}
+          </SidebarMenuItem>
         </SidebarMenu>
+        <Collapsible open={memberToolsOpen} onOpenChange={setMemberToolsOpen} className="w-full">
+            <CollapsibleTrigger asChild>
+                <SidebarMenuButton className="w-full justify-start mt-4" >
+                    Member Tools
+                    <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", memberToolsOpen && "rotate-180")} />
+                </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+                <SidebarMenu className="mt-2">
+                  {memberNavItems.slice(1).map((item) => (
+                    <SidebarMenuItem key={item.label}>
+                      <Link href={item.href} legacyBehavior passHref>
+                        <SidebarMenuButton isActive={isActive(item.href)} tooltip={item.tooltip}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                          {item.badge && <span className="ml-auto bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-full">{item.badge}</span>}
+                        </SidebarMenuButton>
+                      </Link>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+            </CollapsibleContent>
+        </Collapsible>
         
         {user.role === "admin" && (
             <>
