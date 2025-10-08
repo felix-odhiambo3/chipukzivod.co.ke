@@ -119,6 +119,73 @@
         }
       },
       "required": ["isAdmin"]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "description": "Represents a service offered by Chipukizi VOD.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the service."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the service."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL for a representative image of the service.",
+          "format": "uri"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "description"]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "description": "Represents a booking inquiry for a service.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "serviceId": {
+          "type": "string"
+        },
+        "serviceTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "contacted"],
+          "default": "pending"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "email", "serviceId", "serviceTitle", "message", "status"]
     }
   },
   "auth": {
@@ -156,6 +223,26 @@
             "$ref": "#/entities/AdminRole"
           },
           "description": "Grants admin privileges. The existence of a document here makes a user an admin."
+        }
+      },
+      {
+        "path": "/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/entities/Service"
+          },
+          "description": "Stores details about services offered. Publicly readable, admin writable."
+        }
+      },
+      {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/entities/Booking"
+          },
+          "description": "Stores service booking inquiries. Public can create, admins can read/update."
         }
       }
     ]
