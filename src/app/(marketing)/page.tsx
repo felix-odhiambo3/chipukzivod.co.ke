@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,16 +20,20 @@ export default function HomePage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
+
+  // Only run the query if the user is logged in
+  const shouldFetchEvents = !!user;
 
   const eventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !shouldFetchEvents) return null;
     return query(
       collection(firestore, 'events'), 
       where('status', '==', "published"),
       orderBy('startDatetime', 'asc'),
       limit(3)
     );
-  }, [firestore]);
+  }, [firestore, shouldFetchEvents]);
 
   const { data: events, isLoading } = useCollection<Event>(eventsQuery);
 
@@ -174,41 +178,66 @@ export default function HomePage() {
           <div className="container">
             <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Updates & Events</h2>
             <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Stay up to date with our latest news, workshops, and community highlights.</p>
-            <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {isLoading && [...Array(3)].map((_, i) => (
-                <Card key={i}>
-                  <Skeleton className="h-48 w-full"/>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-1/2 mt-2" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6 mt-2" />
-                  </CardContent>
-                </Card>
-              ))}
-              {!isLoading && events && events.length > 0 && events.map((event) => (
-                <Card key={event.id} className="overflow-hidden">
-                  {event.imageUrl && <Image src={event.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint="event photo"/>}
-                  <CardHeader>
-                    <CardTitle>{event.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{new Date(event.startDatetime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
-                    <Button asChild variant="link" className="px-0 mt-2">
-                        <Link href={`/events/${event.id}`}>Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            {!isLoading && (!events || events?.length === 0) && (
-              <p className="text-center text-muted-foreground mt-12">
-                No upcoming events right now. Check back soon!
-              </p>
+            
+            {(isUserLoading || (isLoading && shouldFetchEvents)) && (
+              <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <Skeleton className="h-48 w-full"/>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2 mt-2" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6 mt-2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )}
+            
+            {!isUserLoading && !shouldFetchEvents && (
+              <div className="text-center py-16 border-2 border-dashed rounded-lg mt-12 max-w-2xl mx-auto">
+                <Lock className="mx-auto h-12 w-12 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-medium text-muted-foreground">Log In to See Our Events</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Become a member to get access to our latest events and updates.</p>
+                <Button asChild className="mt-6">
+                  <Link href="/login">
+                    Member Login
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+            {!isLoading && shouldFetchEvents && (
+              <div className="mt-12">
+                {events && events.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {events.map((event) => (
+                      <Card key={event.id} className="overflow-hidden">
+                        {event.imageUrl && <Image src={event.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint="event photo"/>}
+                        <CardHeader>
+                          <CardTitle>{event.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{new Date(event.startDatetime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{event.description}</p>
+                          <Button asChild variant="link" className="px-0 mt-2">
+                              <Link href={`/events/${event.id}`}>Read More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground mt-12">
+                    No upcoming events right now. Check back soon!
+                  </p>
+                )}
+              </div>
+            )}
+            
           </div>
         </section>
 

@@ -5,9 +5,9 @@ import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, Lock } from "lucide-react";
 import React from 'react';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,37 +62,64 @@ function EventsLoadingSkeleton() {
     );
 }
 
+function LoggedOutEventsState() {
+  return (
+    <div className="text-center py-16 border-2 border-dashed rounded-lg mt-6">
+      <Lock className="mx-auto h-12 w-12 text-muted-foreground" />
+      <h3 className="mt-4 text-lg font-medium text-muted-foreground">Please Log In to View Events</h3>
+      <p className="mt-1 text-sm text-muted-foreground">Our events are available to members. Please log in or join to see what's happening.</p>
+      <Button asChild className="mt-6">
+        <Link href="/login">
+          Member Login
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
 export default function EventsPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const firestore = useFirestore();
+  const { user, isUserLoading } = useUser();
   const now = new Date().toISOString();
 
+  // Only run queries if the user is logged in
+  const shouldFetchEvents = !!user;
+
   const upcomingEventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !shouldFetchEvents) return null;
     return query(
       collection(firestore, 'events'), 
       where('status', '==', "published"),
       where('startDatetime', '>=', now),
       orderBy('startDatetime', 'asc')
     );
-  }, [firestore, now]);
+  }, [firestore, now, shouldFetchEvents]);
 
   const pastEventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !shouldFetchEvents) return null;
     return query(
       collection(firestore, 'events'), 
       where('status', '==', "published"),
       where('startDatetime', '<', now),
       orderBy('startDatetime', 'desc')
     );
-  }, [firestore, now]);
+  }, [firestore, now, shouldFetchEvents]);
 
   const { data: upcomingEvents, isLoading: isLoadingUpcoming } = useCollection<Event>(upcomingEventsQuery);
   const { data: pastEvents, isLoading: isLoadingPast } = useCollection<Event>(pastEventsQuery);
 
-  const isLoading = isLoadingUpcoming || isLoadingPast;
+  const isLoading = (isUserLoading || isLoadingUpcoming || isLoadingPast) && shouldFetchEvents;
 
   const renderContent = () => {
+    if (isUserLoading) {
+      return <EventsLoadingSkeleton />;
+    }
+
+    if (!user) {
+      return <LoggedOutEventsState />;
+    }
+
     if (isLoading) {
       return <EventsLoadingSkeleton />;
     }
