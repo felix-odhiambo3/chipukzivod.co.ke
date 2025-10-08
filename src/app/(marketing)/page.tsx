@@ -76,7 +76,7 @@ export default function HomePage() {
               <Link href="/contact" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">Contact Us</Link>
             </div>
           </div>
-        </section>
+        </section>k
 
         <section className="welcome-events-section py-16 bg-white max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 items-start">
@@ -158,47 +158,7 @@ export default function HomePage() {
         </section>
 
 
-        {/* Brief Overview Section */}
-        <section className="py-16 lg:py-24 bg-card">
-          <div className="container grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold font-headline tracking-tight">Welcome to Chipukizi Hub</h2>
-              <p className="mt-4 text-muted-foreground">
-                We are a vibrant community of film and video professionals, united by a passion for storytelling and a commitment to cooperative principles. Our mission is to create high-quality content while fostering a supportive and equitable environment for our members.
-              </p>
-              <div className="mt-6 flex gap-4">
-                <Button asChild>
-                  <Link href="/about">Learn More <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/join">Join Us</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-                <div className="p-6 bg-background rounded-lg text-center">
-                    <Film className="mx-auto h-10 w-10 text-primary mb-2"/>
-                    <h3 className="font-semibold">Creative Production</h3>
-                    <p className="text-sm text-muted-foreground">From concept to final cut.</p>
-                </div>
-                <div className="p-6 bg-background rounded-lg text-center">
-                    <Handshake className="mx-auto h-10 w-10 text-primary mb-2"/>
-                    <h3 className="font-semibold">Partnerships</h3>
-                    <p className="text-sm text-muted-foreground">Collaborating for impact.</p>
-                </div>
-                <div className="p-6 bg-background rounded-lg text-center">
-                    <Heart className="mx-auto h-10 w-10 text-primary mb-2"/>
-                    <h3 className="font-semibold">Community Focused</h3>
-                    <p className="text-sm text-muted-foreground">Giving back is in our DNA.</p>
-                </div>
-                 <div className="p-6 bg-background rounded-lg text-center">
-                    <ArrowRight className="mx-auto h-10 w-10 text-primary mb-2"/>
-                    <h3 className="font-semibold">Member Growth</h3>
-                    <p className="text-sm text-muted-foreground">Investing in our people.</p>
-                </div>
-            </div>
-          </div>
-        </section>
+        
 
         {/* Latest Updates Section */}
         <section className="py-16 lg:py-24">
