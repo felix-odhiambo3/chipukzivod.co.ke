@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "A diverse group of creative professionals collaborating in a modern office space.",
+      "imageUrl": "https://picsum.photos/seed/hero/1920/1080",
+      "imageHint": "team collaboration"
+    },
+    {
+      "id": "event1",
+      "description": "People attending a community meeting in a bright hall.",
+      "imageUrl": "https://picsum.photos/seed/event1/400/300",
+      "imageHint": "community meeting"
+    },
+    {
+      "id": "event2",
+      "description": "A person leading a workshop training session.",
+      "imageUrl": "https://picsum.photos/seed/event2/400/300",
+      "imageHint": "workshop training"
+    },
+    {
+      "id": "event3",
+      "description": "A speaker presenting on a stage at a conference.",
+      "imageUrl": "https://picsum.photos/seed/event3/400/300",
+      "imageHint": "conference presentation"
+    },
+    {
+      "id": "service1",
+      "description": "A professional video production setup with cameras and lighting.",
+      "imageUrl": "https://picsum.photos/seed/service1/400/300",
+      "imageHint": "video production"
+    },
+    {
+      "id": "service2",
+      "description": "A photographer taking pictures during a professional session.",
+      "imageUrl": "https://picsum.photos/seed/service2/400/300",
+      "imageHint": "photography session"
+    },
+    {
+      "id": "service3",
+      "description": "Equipment for a live streaming event.",
+      "imageUrl": "https://picsum.photos/seed/service3/400/300",
+      "imageHint": "live streaming"
+    },
+    {
+      "id": "partner1",
+      "description": "Generic company logo placeholder.",
+      "imageUrl": "https://picsum.photos/seed/logo1/150/50",
+      "imageHint": "company logo"
+    },
+    {
+      "id": "partner2",
+      "description": "Generic brand logo placeholder.",
+      "imageUrl": "https://picsum.photos/seed/logo2/150/50",
+      "imageHint": "brand logo"
+    },
+    {
+      "id": "partner3",
+      "description": "Generic technology company logo placeholder.",
+      "imageUrl": "https://picsum.photos/seed/logo3/150/50",
+      "imageHint": "tech logo"
+    },
+    {
+      "id": "partner4",
+      "description": "Generic startup logo placeholder.",
+      "imageUrl": "https://picsum.photos/seed/logo4/150/50",
+      "imageHint": "startup logo"
+    }
+  ]
 }
