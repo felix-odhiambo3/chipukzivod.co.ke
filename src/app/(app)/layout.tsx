@@ -11,15 +11,9 @@ import {
   SidebarTrigger,
   SidebarFooter,
   useSidebar,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown } from "lucide-react";
+import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -37,6 +31,7 @@ const memberNavItems = [
 ];
 
 const adminNavItems = [
+    { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
     { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },
@@ -52,7 +47,7 @@ function AppSidebar() {
     role: "admin", // or "member"
   };
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
 
   return (
@@ -142,8 +137,9 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems];
-        const currentItem = allItems.find(item => item.href === pathname);
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events", label: "Manage Events"}];
+        const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
+        if (pathname.startsWith('/events/')) return "Event Details";
         return currentItem?.label || "Dashboard";
     }, [pathname]);
 

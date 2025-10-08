@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { events } from '@/lib/data';
-import { ArrowRight, Film, Handshake, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 
 const heroImage = PlaceHolderImages.find(img => img.id === 'hero');
@@ -76,7 +76,7 @@ export default function HomePage() {
               <Link href="/contact" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">Contact Us</Link>
             </div>
           </div>
-        </section>k
+        </section>
 
         <section className="welcome-events-section py-16 bg-white max-w-7xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-8 items-start">
@@ -168,7 +168,7 @@ export default function HomePage() {
             <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {events.slice(0, 3).map((event) => (
                 <Card key={event.title} className="overflow-hidden">
-                  {event.image && <Image src={event.image.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint={event.image.imageHint}/>}
+                  {event.image && event.image.imageUrl && <Image src={event.image.imageUrl} alt={event.title} width={400} height={300} className="w-full h-48 object-cover" data-ai-hint={event.image.imageHint}/>}
                   <CardHeader>
                     <CardTitle>{event.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">{new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -211,7 +211,7 @@ export default function HomePage() {
               {partnerLogos.map((logo) => (
                 <Image
                   key={logo.id}
-                  src="./images/second.svg"
+                  src={logo.imageUrl}
                   alt={logo.description}
                   width={150}
                   height={50}
