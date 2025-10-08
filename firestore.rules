@@ -1,120 +1,87 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a role-based access control model with public read access to published events.
+ * @description This ruleset enforces role-based access control, with public read access to events and restricted write access to admins.
  *
  * Data Structure:
  * - /events/{eventId}: Stores event details.
  * - /users/{userId}: Stores user profiles.
- * - /roles_admin/{userId}: Indicates admin privileges.
+ * - /roles_admin/{userId}: Presence indicates admin privileges.
  *
  * Key Security Decisions:
- * - Public read access for 'published' events, restricted writes to admins.
- * - User-level read access for user profiles, admin read access for all profiles.
- * - Admin privileges granted by the presence of a document in /roles_admin/{userId}.
+ * - Events are publicly readable, but only admins can create, update, or delete them.
+ * - Users can only read their own profile data.
+ * - Admin privileges are granted by the presence of a document in the /roles_admin/{userId} collection.
  *
  * Denormalization for Authorization:
- * - Events have a `createdByAdminId` field to link them to the admin who created them, enabling admin-only write access.
- *
- * Structural Segregation:
- * - The `status` field segregates 'published' and 'draft' events. Public read access is granted based on the `status` field being 'published'.
+ * - Events documents include a `createdByAdminId` field, enabling rules to verify the creator is an admin.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to the /events collection.
+     * @description Manages access to event documents.
      * @path /events/{eventId}
-     * @allow (get, list): Any user can read published events.
-     * @allow (create, update, delete): Only admins can create, update, or delete events.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete events.
-     * @principle Allows public read access for published events, restricts write access to admins.
+     * @allow (get, list) Anyone can read events.
+     * @allow (create, update, delete) Only admins can modify events.
+     * @deny (create, update, delete) Non-admins cannot modify events.
+     * @principle Allows public read access but restricts writes to admins.
      */
     match /events/{eventId} {
-      // Allow anyone to read published events
-      allow get, list: if true;
-
-      // Only admins can create, update, and delete events
+      allow get: if true;
+      allow list: if true;
       allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
-      allow delete: if isAdmin() && resource != null;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Controls access to the /users collection.
+     * @description Manages access to user profile documents.
      * @path /users/{userId}
-     * @allow (get): Users can read their own profile, and admins can read any profile.
-     * @allow (list): Admins can list all users. Users cannot list all users.
-     * @allow (create): Users can create their own profile.
-     * @allow (update, delete): Users can update their own profile, and admins can update any profile.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete user profiles (except for their own).
-     * @principle Enforces user-level access to profiles, with admin overrides.
+     * @allow (get) Users can read their own profile.
+     * @deny (get) Users cannot read other user's profiles.
+     * @allow (create) Users can create their own profile (self-registration).
+     * @allow (update) Users can update their own profile.
+     * @allow (delete) Users can delete their own profile.
+     * @deny (create, update, delete) Users cannot manage other user profiles.
+     * @principle Enforces user-ownership for profile data.
      */
     match /users/{userId} {
-      // Allow users to read their own profile, and admins to read any profile
-      allow get: if isOwner(userId) || isAdmin();
-
-      // Allow admins to list all users.
-      allow list: if isAdmin();
-
-      // Allow users to create their own profile
-      allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
-
-      // Allow users to update their own profile, and admins to update any profile
-      allow update: if (isOwner(userId) && resource != null) || (isAdmin() && resource != null);
-
-      // Allow users to delete their own profile, and admins to delete any profile
-      allow delete: if (isOwner(userId) && resource != null) || (isAdmin() && resource != null);
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isSignedIn();
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+      allow list: if false;
     }
 
     /**
-     * @description Controls access to the /roles_admin collection.
+     * @description Manages admin roles. The existence of a document grants admin privileges.
      * @path /roles_admin/{userId}
-     * @allow (get, list): Only admins can access the admin roles collection.
-     * @allow (create): Only admins can grant admin roles.
-     * @allow (update, delete): Only admins can update or delete admin roles.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete admin roles.
-     * @principle Restricts management of admin roles to existing admins.
+     * @allow (get) Admins can check for admin roles.
+     * @allow (create) Only admins can grant admin roles.
+     * @allow (update) Only admins can modify admin roles.
+     * @allow (delete) Only admins can revoke admin roles.
+     * @deny (create, update, delete) Non-admins cannot grant admin roles.
+     * @principle Grants admin privileges based on document existence.
      */
     match /roles_admin/{userId} {
-      // Only admins can read admin roles
-      allow get, list: if isAdmin();
-
-      // Only admins can create admin roles
+      allow get: if isAdmin();
       allow create: if isAdmin();
-
-      // Only admins can update admin roles
-      allow update: if isAdmin() && resource != null;
-
-      // Only admins can delete admin roles
-      allow delete: if isAdmin() && resource != null;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+      allow list: if false;
     }
 
-    // ---- Helper functions ----
-
-    /**
-     * @description Checks if the current user is signed in.
-     * @return {boolean} True if the user is signed in, false otherwise.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the current user is the owner of the resource.
-     * @param {string} userId - The user ID to compare against the request's auth UID.
-     * @return {boolean} True if the user is the owner, false otherwise.
-     */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the current user is an admin.
-     * @return {boolean} True if the user is an admin, false otherwise.
-     */
     function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
   }
 }
