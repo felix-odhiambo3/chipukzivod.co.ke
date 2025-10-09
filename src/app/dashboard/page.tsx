@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, Edit, HelpingHand, Lightbulb, Megaphone } from "lucide-react";
+import { ArrowRight, Calendar, User, HelpingHand, Lightbulb, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/firebase/index";
 
@@ -10,8 +10,8 @@ const dashboardItems = [
     {
         title: "Edit Your Profile",
         description: "Keep your information up to date.",
-        icon: Edit,
-        href: "/profile"
+        icon: User,
+        href: "/dashboard/profile"
     },
     {
         title: "Latest Announcements",
@@ -23,7 +23,7 @@ const dashboardItems = [
         title: "Event Sign-ups",
         description: "RSVP for upcoming workshops and meetings.",
         icon: Calendar,
-        href: "/events"
+        href: "/dashboard/events"
     },
     {
         title: "Resource Center",

@@ -1,4 +1,3 @@
-
 'use client';
 import {
   SidebarProvider,
@@ -27,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
+  { href: "/dashboard/profile", icon: User, label: "Profile", tooltip: "Profile" },
   { href: "/dashboard/events", icon: Calendar, label: "Events", tooltip: "Events" },
   { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", badge: "3", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
@@ -179,7 +179,7 @@ function AppHeaderContent() {
     const pageTitle = React.useMemo(() => {
         const allItems = [...memberNavItems, ...adminNavItems];
         if (pathname.startsWith('/dashboard/events/')) return "Event Details";
-        const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
+        const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/dashboard");
         return currentItem?.label || "Dashboard";
     }, [pathname]);
 
