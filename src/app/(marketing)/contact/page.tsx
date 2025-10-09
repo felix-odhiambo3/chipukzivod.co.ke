@@ -221,7 +221,7 @@ export default function ContactPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Preferred Contact Method</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a method..." />
@@ -243,7 +243,7 @@ export default function ContactPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Preferred Time</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                            <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a time..." />
