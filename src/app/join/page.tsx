@@ -35,9 +35,20 @@ export default function JoinPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const role = values.email.toLowerCase() === 'admin@chipukizivod.co.ke' ? 'admin' : 'member';
+    
+    if (role === 'admin' && values.password !== 'AdminPassword123') {
+        toast({
+            variant: 'destructive',
+            title: 'Registration Failed',
+            description: 'Invalid password for admin account.',
+        });
+        return;
+    }
+
     const userData: UserFormData = {
       ...values,
-      role: 'member',
+      role,
     };
     try {
       await createUser(userData);
