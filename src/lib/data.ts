@@ -85,3 +85,11 @@ export type Bookmark = {
     mediaUrl: string;
     createdAt: any;
 };
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  role: 'admin' | 'member';
+};

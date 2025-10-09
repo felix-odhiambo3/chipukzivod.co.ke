@@ -140,7 +140,7 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events", label: "Manage Events"}, {href: "/admin/services", label: "Manage Services"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events", label: "Manage Events"}, {href: "/admin/services", label: "Manage Services"}, {href: "/admin/users", label: "Manage Users"}];
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";
         return currentItem?.label || "Dashboard";
