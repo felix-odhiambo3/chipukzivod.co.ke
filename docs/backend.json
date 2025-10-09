@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Event": {
@@ -261,6 +262,21 @@
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["mediaId", "mediaTitle", "mediaType", "mediaUrl", "createdAt"]
+    },
+    "Suggestion": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Suggestion",
+        "description": "Represents a member's suggestion from the suggestion box.",
+        "type": "object",
+        "properties": {
+            "suggestion": { "type": "string" },
+            "isAnonymous": { "type": "boolean" },
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "status": { "type": "string", "enum": ["new", "viewed", "in-progress", "done"], "default": "new" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["suggestion", "isAnonymous", "userId", "userName", "status"]
     }
   },
   "auth": {
@@ -360,6 +376,14 @@
               "entityName": "Bookmark",
               "schema": { "$ref": "#/entities/Bookmark" },
               "description": "Stores user-specific bookmarks of gallery items. Writable by the user."
+          }
+      },
+      {
+          "path": "/suggestions/{suggestionId}",
+          "definition": {
+              "entityName": "Suggestion",
+              "schema": { "$ref": "#/entities/Suggestion" },
+              "description": "Stores member suggestions. Writable by authenticated users, readable/updatable by admins."
           }
       }
     ]

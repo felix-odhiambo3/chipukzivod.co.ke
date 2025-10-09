@@ -38,6 +38,7 @@ const adminNavItems = [
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
+    { href: "/admin/suggestions", icon: Lightbulb, label: "Suggestions", tooltip: "Member Suggestions" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
     { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },

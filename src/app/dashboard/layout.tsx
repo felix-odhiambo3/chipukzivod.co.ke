@@ -23,6 +23,7 @@ import { usePathname } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -37,6 +38,7 @@ const adminNavItems = [
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
+    { href: "/admin/suggestions", icon: Lightbulb, label: "Suggestions", tooltip: "Member Suggestions" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
     { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },
@@ -60,22 +62,22 @@ function AppSidebar() {
         <SidebarContent>
           <div className="space-y-4 p-2">
             <div className="space-y-2">
-              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
-              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-8 w-full rounded-md" />
             </div>
-             <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+             <Skeleton className="h-8 w-full rounded-md" />
              <div className="space-y-2">
-              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
-              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-8 w-full rounded-md" />
             </div>
           </div>
         </SidebarContent>
         <SidebarFooter>
           <div className="flex items-center gap-3 p-2 rounded-md m-2">
-            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            <Skeleton className="h-9 w-9 rounded-full" />
             <div className="flex-1 space-y-1">
-              <div className="h-4 w-24 rounded-md bg-muted animate-pulse" />
-              <div className="h-3 w-32 rounded-md bg-muted animate-pulse" />
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-3 w-32 rounded-md" />
             </div>
           </div>
         </SidebarFooter>

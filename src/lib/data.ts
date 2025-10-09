@@ -1,3 +1,4 @@
+
 export type Event = {
     id: string;
     title: string;
@@ -92,4 +93,14 @@ export type UserProfile = {
   displayName: string;
   photoURL?: string;
   role: 'admin' | 'member';
+};
+
+export type Suggestion = {
+    id: string;
+    suggestion: string;
+    isAnonymous: boolean;
+    userId: string;
+    userName: string;
+    status: 'new' | 'viewed' | 'in-progress' | 'done';
+    createdAt: any;
 };
