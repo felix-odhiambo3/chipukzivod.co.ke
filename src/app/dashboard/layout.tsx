@@ -1,3 +1,4 @@
+
 'use client';
 import {
   SidebarProvider,
@@ -13,7 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare } from "lucide-react";
+import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare, Mail } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -34,6 +36,7 @@ const adminNavItems = [
     { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
+    { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
     { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },
@@ -41,16 +44,48 @@ const adminNavItems = [
 
 function AppSidebar() {
   const pathname = usePathname();
-  // Mock user data
-  const user = {
-    name: "John Doe",
-    email: "john.doe@chipukizi.coop",
-    avatar: "https://picsum.photos/seed/avatar1/100/100",
-    role: "admin", // or "member"
-  };
+  const { user, isUserLoading } = useUser();
 
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
+  
+  if (isUserLoading) {
+    return (
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-2">
+            <Logo />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="space-y-4 p-2">
+            <div className="space-y-2">
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+            </div>
+             <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+             <div className="space-y-2">
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+            </div>
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-3 p-2 rounded-md m-2">
+            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            <div className="flex-1 space-y-1">
+              <div className="h-4 w-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-3 w-32 rounded-md bg-muted animate-pulse" />
+            </div>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+    )
+  }
+
+  const displayName = user?.displayName || 'Member';
+  const displayEmail = user?.email || '';
+  const displayAvatar = user?.photoURL || '';
 
   return (
     <Sidebar>
@@ -65,7 +100,7 @@ function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
              <Link href="/dashboard">
-                <SidebarMenuButton isActive={isActive("/dashboard")} tooltip="Dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
@@ -96,7 +131,7 @@ function AppSidebar() {
             </CollapsibleContent>
         </Collapsible>
         
-        {user.role === "admin" && (
+        {user?.role === "admin" && (
             <>
             <SidebarMenu className="mt-4">
                 <li className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider group-data-[collapsible=icon]:hidden">Admin Panel</li>
@@ -117,12 +152,12 @@ function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-3 p-2 rounded-md hover:bg-sidebar-accent m-2">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={displayAvatar} alt={displayName} />
+            <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-semibold truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            <p className="text-sm font-semibold truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
           </div>
           <Link href="/login" className="group-data-[collapsible=icon]:hidden">
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -139,7 +174,7 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events", label: "Manage Events"}, {href: "/admin/services", label: "Manage Services"}];
+        const allItems = [...memberNavItems, ...adminNavItems];
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";
         return currentItem?.label || "Dashboard";
@@ -173,7 +208,7 @@ function AppHeaderContent() {
     )
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">

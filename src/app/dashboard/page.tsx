@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Calendar, Edit, HelpingHand, Lightbulb, Megaphone } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/firebase/index";
 
 const dashboardItems = [
     {
@@ -37,12 +38,13 @@ const dashboardItems = [
 ]
 
 export default function DashboardPage() {
-    const user = { name: "John" };
+    const { user } = useUser();
+    const userName = user?.displayName?.split(' ')[0] || 'Member';
 
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold font-headline">Welcome back, {user.name}!</h1>
+                <h1 className="text-3xl font-bold font-headline">Welcome back, {userName}!</h1>
                 <p className="text-muted-foreground">Here's your personal hub for all things Chipukizi.</p>
             </div>
             

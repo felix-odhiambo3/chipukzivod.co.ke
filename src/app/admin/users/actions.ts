@@ -1,6 +1,6 @@
 'use server';
 
-import { getApp, getApps, initializeApp } from 'firebase-admin/app';
+import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
@@ -88,6 +88,13 @@ export async function deleteUser(uid: string) {
   // Delete from Firestore
   await adminDb.collection('users').doc(uid).delete();
 
+  // Also delete admin role if it exists
+  const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
+  if ((await adminRoleRef.get()).exists) {
+      await adminRoleRef.delete();
+  }
+
+
   return { uid };
 }
 
@@ -106,4 +113,3 @@ export async function sendPasswordReset(email: string) {
   // but for an admin-initiated reset, this would be the flow. We'll simulate the "request" part.
   return { message: `A password reset link would be sent to ${email}.` };
 }
-

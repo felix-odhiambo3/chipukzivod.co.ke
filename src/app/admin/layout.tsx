@@ -1,3 +1,4 @@
+
 'use client';
 import {
   SidebarProvider,
@@ -21,6 +22,7 @@ import React from "react";
 import { usePathname } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -42,16 +44,48 @@ const adminNavItems = [
 
 function AppSidebar() {
   const pathname = usePathname();
-  // Mock user data
-  const user = {
-    name: "John Doe",
-    email: "john.doe@chipukizi.coop",
-    avatar: "https://picsum.photos/seed/avatar1/100/100",
-    role: "admin", // or "member"
-  };
+  const { user, isUserLoading } = useUser();
 
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
+  
+  if (isUserLoading) {
+    return (
+      <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center gap-2">
+            <Logo />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <div className="space-y-4 p-2">
+            <div className="space-y-2">
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+            </div>
+             <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+             <div className="space-y-2">
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+              <div className="h-8 w-full rounded-md bg-muted animate-pulse" />
+            </div>
+          </div>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-3 p-2 rounded-md m-2">
+            <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+            <div className="flex-1 space-y-1">
+              <div className="h-4 w-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-3 w-32 rounded-md bg-muted animate-pulse" />
+            </div>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+    )
+  }
+
+  const displayName = user?.displayName || 'Member';
+  const displayEmail = user?.email || '';
+  const displayAvatar = user?.photoURL || '';
 
   return (
     <Sidebar>
@@ -66,7 +100,7 @@ function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
              <Link href="/dashboard">
-                <SidebarMenuButton isActive={isActive("/dashboard")} tooltip="Dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
@@ -97,7 +131,7 @@ function AppSidebar() {
             </CollapsibleContent>
         </Collapsible>
         
-        {user.role === "admin" && (
+        {user?.role === "admin" && (
             <>
             <SidebarMenu className="mt-4">
                 <li className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider group-data-[collapsible=icon]:hidden">Admin Panel</li>
@@ -118,12 +152,12 @@ function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-3 p-2 rounded-md hover:bg-sidebar-accent m-2">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={displayAvatar} alt={displayName} />
+            <AvatarFallback>{displayName.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden group-data-[collapsible=icon]:hidden">
-            <p className="text-sm font-semibold truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            <p className="text-sm font-semibold truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
           </div>
           <Link href="/login" className="group-data-[collapsible=icon]:hidden">
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -140,7 +174,10 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events", label: "Manage Events"}, {href: "/admin/services", label: "Manage Services"}, {href: "/admin/users", label: "Manage Users"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}];
+        if (pathname.match(/\/admin\/events\/edit\/.+/)) return "Edit Event";
+        if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
+
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";
         return currentItem?.label || "Dashboard";
@@ -174,7 +211,7 @@ function AppHeaderContent() {
     )
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">

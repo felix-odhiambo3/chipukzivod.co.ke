@@ -1,5 +1,5 @@
 'use client';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -61,10 +61,6 @@ function DeleteEventButton({ eventId }: { eventId: string }) {
 
 export default function ManageEventsPage() {
     const firestore = useFirestore();
-    const { user } = useUser();
-
-    // A real app should verify admin role here before rendering.
-    // We assume the user is an admin for this page.
 
     const eventsQuery = useMemoFirebase(() => {
       if (!firestore) return null;
