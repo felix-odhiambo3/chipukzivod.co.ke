@@ -205,6 +205,62 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "email", "service", "message", "status"]
+    },
+    "GalleryMedia": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Gallery Media",
+      "description": "Represents a media item in the gallery.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "caption": { "type": "string" },
+        "type": { "type": "string", "enum": ["image", "video", "youtube"] },
+        "url": { "type": "string", "format": "uri" },
+        "viewCount": { "type": "number", "default": 0 },
+        "createdByAdminId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "url", "createdByAdminId"]
+    },
+    "Like": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Like",
+        "description": "Represents a user's like on a gallery item.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "createdAt"]
+    },
+    "Comment": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Comment",
+        "description": "Represents a user's comment on a gallery item.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "userName": { "type": "string" },
+            "userPhotoURL": { "type": "string", "format": "uri" },
+            "text": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "userName", "text", "createdAt"]
+    },
+    "Bookmark": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Bookmark",
+        "description": "Represents a user's bookmark of a gallery item.",
+        "type": "object",
+        "properties": {
+            "mediaId": { "type": "string" },
+            "mediaTitle": { "type": "string" },
+            "mediaType": { "type": "string" },
+            "mediaUrl": { "type": "string", "format": "uri" },
+            "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["mediaId", "mediaTitle", "mediaType", "mediaUrl", "createdAt"]
     }
   },
   "auth": {
@@ -273,6 +329,38 @@
           },
           "description": "Stores contact form submissions. Public can create, admins can read/update."
         }
+      },
+      {
+        "path": "/gallery/{mediaId}",
+        "definition": {
+          "entityName": "GalleryMedia",
+          "schema": { "$ref": "#/entities/GalleryMedia" },
+          "description": "Stores gallery media items. Publicly readable, admin-writable."
+        }
+      },
+      {
+          "path": "/gallery/{mediaId}/likes/{likeId}",
+          "definition": {
+              "entityName": "Like",
+              "schema": { "$ref": "#/entities/Like" },
+              "description": "Stores likes for a gallery item. Writable by authenticated users."
+          }
+      },
+      {
+          "path": "/gallery/{mediaId}/comments/{commentId}",
+          "definition": {
+              "entityName": "Comment",
+              "schema": { "$ref": "#/entities/Comment" },
+              "description": "Stores comments for a gallery item. Writable by authenticated users, deletable by comment owner or admin."
+          }
+      },
+      {
+          "path": "/users/{userId}/bookmarks/{bookmarkId}",
+          "definition": {
+              "entityName": "Bookmark",
+              "schema": { "$ref": "#/entities/Bookmark" },
+              "description": "Stores user-specific bookmarks of gallery items. Writable by the user."
+          }
       }
     ]
   }

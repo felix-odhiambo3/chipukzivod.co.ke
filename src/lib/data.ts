@@ -49,3 +49,39 @@ export type ContactInquiry = {
     status: 'pending' | 'responded';
     createdAt: string;
 };
+
+export type GalleryMedia = {
+    id: string;
+    title: string;
+    caption?: string;
+    type: 'image' | 'video' | 'youtube';
+    url: string;
+    viewCount: number;
+    createdByAdminId: string;
+    createdAt: any;
+    updatedAt: any;
+};
+
+export type Comment = {
+    id: string;
+    userId: string;
+    userName: string;
+    userPhotoURL?: string;
+    text: string;
+    createdAt: any;
+};
+
+export type Like = {
+    id: string;
+    userId: string;
+    createdAt: any;
+};
+
+export type Bookmark = {
+    id: string;
+    mediaId: string;
+    mediaTitle: string;
+    mediaType: 'image' | 'video' | 'youtube';
+    mediaUrl: string;
+    createdAt: any;
+};
