@@ -183,6 +183,8 @@ function AppHeaderContent() {
         if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
         if (pathname.match(/\/admin\/resources\/edit\/.+/)) return "Edit Resource";
         if (pathname.match(/\/admin\/announcements\/edit\/.+/)) return "Edit Announcement";
+        if (pathname.match(/\/events\/.+/)) return "Event Details";
+
 
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";
@@ -264,5 +266,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
-
-    
