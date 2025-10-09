@@ -4,26 +4,40 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
 } from 'firebase/auth';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError } from './errors';
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
-  // CRITICAL: Call signInAnonymously directly. Do NOT use 'await signInAnonymously(...)'.
-  signInAnonymously(authInstance);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+  signInAnonymously(authInstance).catch(error => {
+    // Although not a Firestore error, we can use the same system to surface it.
+    console.error("Anonymous sign-in error:", error);
+  });
 }
 
 /** Initiate email/password sign-up (non-blocking). */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+  createUserWithEmailAndPassword(authInstance, email, password)
+    .catch(error => {
+      const permissionError = new FirestorePermissionError({
+        path: `auth/email-signup`,
+        operation: 'create',
+        requestResourceData: { email, error: error.code },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
 }
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
-  signInWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+  signInWithEmailAndPassword(authInstance, email, password)
+    .catch(error => {
+      const permissionError = new FirestorePermissionError({
+        path: `auth/email-signin`,
+        operation: 'get',
+        requestResourceData: { email, error: error.code },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
 }
