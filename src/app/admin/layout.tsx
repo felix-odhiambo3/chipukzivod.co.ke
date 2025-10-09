@@ -14,15 +14,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare, Mail } from "lucide-react";
+import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare, Mail, ShieldAlert } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import React from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -212,6 +213,38 @@ function AppHeaderContent() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && user?.role !== 'admin') {
+      router.replace('/dashboard');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || user?.role !== 'admin') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        {isUserLoading ? (
+            <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-6 w-32" />
+                </div>
+                <Skeleton className="h-96 w-screen max-w-4xl" />
+            </div>
+        ) : (
+          <div className="text-center">
+            <ShieldAlert className="mx-auto h-16 w-16 text-destructive" />
+            <h1 className="mt-4 text-2xl font-bold font-headline">Access Denied</h1>
+            <p className="mt-2 text-muted-foreground">You do not have permission to view this page.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Redirecting to your dashboard...</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
