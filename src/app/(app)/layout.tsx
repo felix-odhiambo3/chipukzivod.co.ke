@@ -64,7 +64,7 @@ function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-             <Link href="/dashboard" legacyBehavior passHref>
+             <Link href="/dashboard">
                 <SidebarMenuButton isActive={isActive("/dashboard")} tooltip="Dashboard">
                   <LayoutDashboard />
                   <span>Dashboard</span>
@@ -83,7 +83,7 @@ function AppSidebar() {
                 <SidebarMenu className="mt-2">
                   {memberNavItems.slice(1).map((item) => (
                     <SidebarMenuItem key={item.label}>
-                      <Link href={item.href} legacyBehavior passHref>
+                      <Link href={item.href}>
                         <SidebarMenuButton isActive={isActive(item.href)} tooltip={item.tooltip}>
                           <item.icon />
                           <span>{item.label}</span>
@@ -102,7 +102,7 @@ function AppSidebar() {
                 <li className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider group-data-[collapsible=icon]:hidden">Admin Panel</li>
                 {adminNavItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                    <Link href={item.href} legacyBehavior passHref>
+                    <Link href={item.href}>
                       <SidebarMenuButton isActive={isActive(item.href)} tooltip={item.tooltip}>
                         <item.icon />
                         <span>{item.label}</span>
