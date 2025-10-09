@@ -201,6 +201,7 @@ export default function HomePage() {
               </div>
             )}
             
+            {/** */}
             {!isLoadingAnnouncements && (
               <div className="mt-12">
                 {announcements && announcements.length > 0 ? (
@@ -235,11 +236,11 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-            )}
+            )}*/}
           </div>
         </section>
 
-        {/* Latest Events Section */}
+        {/* Latest Events Section 
         <section className="py-16 lg:py-24">
           <div className="container">
             <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Upcoming Events</h2>
