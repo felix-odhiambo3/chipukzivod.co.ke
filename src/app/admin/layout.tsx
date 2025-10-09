@@ -22,8 +22,10 @@ import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/firebase";
+import { useAuth, useUser } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { signOut } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -49,6 +51,28 @@ const adminNavItems = [
 function AppSidebar() {
   const pathname = usePathname();
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout Failed",
+        description: "An error occurred while logging out.",
+      });
+    }
+  };
 
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
@@ -163,11 +187,9 @@ function AppSidebar() {
             <p className="text-sm font-semibold truncate">{displayName}</p>
             <p className="text-xs text-muted-foreground truncate">{displayEmail}</p>
           </div>
-          <Link href="/login" className="group-data-[collapsible=icon]:hidden">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-                <LogOut className="h-4 w-4"/>
-            </Button>
-          </Link>
+          <Button variant="ghost" size="icon" className="h-8 w-8 group-data-[collapsible=icon]:hidden" onClick={handleLogout}>
+              <LogOut className="h-4 w-4"/>
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
