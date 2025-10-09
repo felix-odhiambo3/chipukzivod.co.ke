@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
-  { href: "/events", icon: Calendar, label: "Events", tooltip: "Events" },
+  { href: "/dashboard/events", icon: Calendar, label: "Events", tooltip: "Events" },
   { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", badge: "3", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
   { href: "/dashboard/suggestion-box", icon: Lightbulb, label: "Suggestion Box", tooltip: "Suggestion Box" },
@@ -178,8 +178,8 @@ function AppHeaderContent() {
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
         const allItems = [...memberNavItems, ...adminNavItems];
+        if (pathname.startsWith('/dashboard/events/')) return "Event Details";
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
-        if (pathname.startsWith('/events/')) return "Event Details";
         return currentItem?.label || "Dashboard";
     }, [pathname]);
 

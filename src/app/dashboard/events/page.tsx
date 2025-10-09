@@ -31,7 +31,7 @@ function EventCard({ event }: { event: Event & { id: string } }) {
         </CardContent>
         <CardContent>
           <Button asChild variant="link" className="px-0 mt-2">
-            <Link href={`/events/${event.id}`}>Learn More <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            <Link href={`/dashboard/events/${event.id}`}>Learn More <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
         </CardContent>
       </div>
@@ -133,10 +133,10 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="container py-12 md:py-16">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">Events & Activities</h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+    <div className="space-y-6">
+      <div className="mb-12">
+        <h1 className="text-3xl font-bold font-headline">Events & Activities</h1>
+        <p className="mt-2 text-muted-foreground">
           Join our workshops, meetings, and community gatherings.
         </p>
       </div>
