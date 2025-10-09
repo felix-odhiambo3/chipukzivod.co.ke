@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, authErrorEmitter } from '@/firebase/non-blocking-login';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import type { AuthError } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -41,6 +42,28 @@ export default function LoginPage() {
       router.replace('/dashboard');
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    const handleAuthError = (error: AuthError) => {
+      let description = 'An unexpected error occurred. Please try again.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        description = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        description = 'An account with this email already exists.';
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Failed',
+        description,
+      });
+    };
+
+    authErrorEmitter.on(handleAuthError);
+    return () => {
+      authErrorEmitter.off(handleAuthError);
+    };
+  }, [toast]);
+
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     if (!auth) {

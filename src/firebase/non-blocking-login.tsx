@@ -4,15 +4,32 @@ import {
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  AuthError,
 } from 'firebase/auth';
-import { errorEmitter } from './error-emitter';
-import { FirestorePermissionError } from './errors';
+
+/**
+ * A strongly-typed pub/sub event emitter for auth errors.
+ */
+const authErrorEmitter = {
+  listeners: [] as ((error: AuthError) => void)[],
+  on(listener: (error: AuthError) => void) {
+    this.listeners.push(listener);
+  },
+  off(listener: (error: AuthError) => void) {
+    this.listeners = this.listeners.filter(l => l !== listener);
+  },
+  emit(error: AuthError) {
+    this.listeners.forEach(listener => listener(error));
+  }
+};
+
+export { authErrorEmitter };
+
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
   signInAnonymously(authInstance).catch(error => {
-    // Although not a Firestore error, we can use the same system to surface it.
-    console.error("Anonymous sign-in error:", error);
+    authErrorEmitter.emit(error);
   });
 }
 
@@ -20,12 +37,7 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
   createUserWithEmailAndPassword(authInstance, email, password)
     .catch(error => {
-      const permissionError = new FirestorePermissionError({
-        path: `auth/email-signup`,
-        operation: 'create',
-        requestResourceData: { email, error: error.code },
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      authErrorEmitter.emit(error);
     });
 }
 
@@ -33,11 +45,6 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
   signInWithEmailAndPassword(authInstance, email, password)
     .catch(error => {
-      const permissionError = new FirestorePermissionError({
-        path: `auth/email-signin`,
-        operation: 'get',
-        requestResourceData: { email, error: error.code },
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      authErrorEmitter.emit(error);
     });
 }
