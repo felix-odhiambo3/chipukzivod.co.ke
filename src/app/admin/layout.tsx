@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
-  { href: "/events", icon: Calendar, label: "Events", tooltip: "Events" },
+  { href: "/dashboard/events", icon: Calendar, label: "Events", tooltip: "Events" },
   { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", badge: "3", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
   { href: "/dashboard/suggestion-box", icon: Lightbulb, label: "Suggestion Box", tooltip: "Suggestion Box" },
@@ -35,6 +35,7 @@ const memberNavItems = [
 
 const adminNavItems = [
     { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
+    { href: "/admin/announcements", icon: Megaphone, label: "Manage Announcements", tooltip: "Manage Announcements" },
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
@@ -177,10 +178,11 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}, {href: "/admin/announcements/new", label: "New Announcement"}];
         if (pathname.match(/\/admin\/events\/edit\/.+/)) return "Edit Event";
         if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
         if (pathname.match(/\/admin\/resources\/edit\/.+/)) return "Edit Resource";
+        if (pathname.match(/\/admin\/announcements\/edit\/.+/)) return "Edit Announcement";
 
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";
@@ -262,3 +264,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
+
+    

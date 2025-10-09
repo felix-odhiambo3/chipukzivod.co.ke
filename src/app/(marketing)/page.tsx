@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Megaphone } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import type { Event } from '@/lib/data';
+import type { Event, Announcement } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const partnerLogos = PlaceHolderImages.filter(img => img.id.startsWith('partner'));
@@ -32,7 +32,17 @@ export default function HomePage() {
     );
   }, [firestore]);
 
-  const { data: events, isLoading } = useCollection<Event>(eventsQuery);
+  const announcementsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'announcements'),
+      orderBy('createdAt', 'desc'),
+      limit(3)
+    );
+  }, [firestore]);
+
+  const { data: events, isLoading: isLoadingEvents } = useCollection<Event>(eventsQuery);
+  const { data: announcements, isLoading: isLoadingAnnouncements } = useCollection<Announcement>(announcementsQuery);
 
   const eventsSlider = [
     {
@@ -170,13 +180,67 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Latest Updates Section */}
+        {/* Latest Announcements Section */}
+        <section className="py-16 lg:py-24 bg-card">
+          <div className="container">
+            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Announcements</h2>
+            <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Keep up with the latest news and updates from the cooperative.</p>
+            
+            {isLoadingAnnouncements && (
+              <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-1/2 mt-2" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6 mt-2" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            
+            {!isLoadingAnnouncements && (
+              <div className="mt-12">
+                {announcements && announcements.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {announcements.map((announcement) => (
+                      <Card key={announcement.id} className="overflow-hidden">
+                        <CardHeader>
+                          <CardTitle className="truncate">{announcement.title}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{new Date(announcement.createdAt.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm text-muted-foreground line-clamp-3">{announcement.content}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground mt-12">
+                    No announcements right now. Check back soon!
+                  </p>
+                )}
+                <div className="text-center mt-12">
+                  <Button asChild>
+                    <Link href="/announcements">View All Announcements <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Latest Events Section */}
         <section className="py-16 lg:py-24">
           <div className="container">
-            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Updates & Events</h2>
-            <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Stay up to date with our latest news, workshops, and community highlights.</p>
+            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Upcoming Events</h2>
+            <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Join our workshops, meetings, and community gatherings.</p>
             
-            {isLoading && (
+            {isLoadingEvents && (
               <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[...Array(3)].map((_, i) => (
                   <Card key={i}>
@@ -194,7 +258,7 @@ export default function HomePage() {
               </div>
             )}
             
-            {!isLoading && (
+            {!isLoadingEvents && (
               <div className="mt-12">
                 {events && events.length > 0 ? (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -219,6 +283,11 @@ export default function HomePage() {
                     No upcoming events right now. Check back soon!
                   </p>
                 )}
+                 <div className="text-center mt-12">
+                  <Button asChild>
+                    <Link href="/events">View All Events <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  </Button>
+                </div>
               </div>
             )}
             

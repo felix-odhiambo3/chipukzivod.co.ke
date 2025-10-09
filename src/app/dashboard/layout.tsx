@@ -28,13 +28,14 @@ const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
   { href: "/dashboard/profile", icon: User, label: "Profile", tooltip: "Profile" },
   { href: "/dashboard/events", icon: Calendar, label: "Events", tooltip: "Events" },
-  { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", badge: "3", tooltip: "Announcements" },
+  { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
   { href: "/dashboard/suggestion-box", icon: Lightbulb, label: "Suggestion Box", tooltip: "Suggestion Box" },
 ];
 
 const adminNavItems = [
     { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
+    { href: "/admin/announcements", icon: Megaphone, label: "Manage Announcements", tooltip: "Manage Announcements" },
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
@@ -243,3 +244,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </SidebarProvider>
   );
 }
+
+    

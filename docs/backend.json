@@ -292,6 +292,21 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "description", "fileUrl", "createdByAdminId"]
+    },
+    "Announcement": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Announcement",
+      "description": "Represents a general announcement.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "mediaUrl": { "type": "string", "format": "uri" },
+        "createdByAdminId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "createdByAdminId"]
     }
   },
   "auth": {
@@ -408,7 +423,17 @@
               "schema": { "$ref": "#/entities/Resource" },
               "description": "Stores downloadable resources. Readable by authenticated users, writable by admins."
           }
+      },
+      {
+        "path": "/announcements/{announcementId}",
+        "definition": {
+            "entityName": "Announcement",
+            "schema": { "$ref": "#/entities/Announcement" },
+            "description": "Stores general announcements. Publicly readable, admin-writable."
+        }
       }
     ]
   }
 }
+
+    

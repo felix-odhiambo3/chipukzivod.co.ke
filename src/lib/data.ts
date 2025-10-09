@@ -1,4 +1,5 @@
 
+
 export type Event = {
     id: string;
     title: string;
@@ -114,3 +115,15 @@ export type Resource = {
     createdAt: any;
     updatedAt: any;
 };
+
+export type Announcement = {
+    id: string;
+    title: string;
+    content: string;
+    mediaUrl?: string;
+    createdByAdminId: string;
+    createdAt: any;
+    updatedAt: any;
+};
+
+    

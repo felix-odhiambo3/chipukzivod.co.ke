@@ -10,6 +10,7 @@ import Image from 'next/image';
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "/announcements", label: "Announcements" },
   { href: "/events", label: "Events" },
   { href: "/services", label: "Services" },
   { href: "/gallery", label: "Gallery" },
@@ -68,3 +69,5 @@ export function Header() {
     </header>
   );
 }
+
+    
