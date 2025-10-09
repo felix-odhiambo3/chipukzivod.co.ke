@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -5,9 +6,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,20 +21,16 @@ export default function HomePage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
-
-  // Only run the query if the user is logged in
-  const shouldFetchEvents = !!user;
 
   const eventsQuery = useMemoFirebase(() => {
-    if (!firestore || !shouldFetchEvents) return null;
+    if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
       where('status', '==', "published"),
       orderBy('startDatetime', 'asc'),
       limit(3)
     );
-  }, [firestore, shouldFetchEvents]);
+  }, [firestore]);
 
   const { data: events, isLoading } = useCollection<Event>(eventsQuery);
 
@@ -89,7 +86,7 @@ export default function HomePage() {
             </div>
             {/* Call-to-Action Buttons */}
             <div className="cta-buttons flex flex-wrap gap-4 justify-center">
-              <Link href="/login" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">Join Us</Link>
+              <Link href="/join" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">Join Us</Link>
               <Link href="#partner" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">Partner With Us</Link>
               <Link href="/services" className="cta-btn tertiary bg-gray-100 text-purple-700 px-6 py-2 rounded font-bold shadow hover:bg-purple-200">View Services</Link>
               <Link href="/booknow" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">Book Now</Link>
@@ -179,7 +176,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Updates & Events</h2>
             <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Stay up to date with our latest news, workshops, and community highlights.</p>
             
-            {(isUserLoading || (isLoading && shouldFetchEvents)) && (
+            {isLoading && (
               <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[...Array(3)].map((_, i) => (
                   <Card key={i}>
@@ -197,20 +194,7 @@ export default function HomePage() {
               </div>
             )}
             
-            {!isUserLoading && !shouldFetchEvents && (
-              <div className="text-center py-16 border-2 border-dashed rounded-lg mt-12 max-w-2xl mx-auto">
-                <Lock className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-medium text-muted-foreground">Log In to See Our Events</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Become a member to get access to our latest events and updates.</p>
-                <Button asChild className="mt-6">
-                  <Link href="/login">
-                    Member Login
-                  </Link>
-                </Button>
-              </div>
-            )}
-
-            {!isLoading && shouldFetchEvents && (
+            {!isLoading && (
               <div className="mt-12">
                 {events && events.length > 0 ? (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
