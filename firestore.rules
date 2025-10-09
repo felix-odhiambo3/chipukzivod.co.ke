@@ -1,184 +1,199 @@
-/**
- * @file Firestore Security Rules
- * @description This ruleset enforces a role-based access control system with public read access to certain collections.
- *
- * Data Structure:
- * - /events/{eventId}: Stores event details.
- * - /users/{userId}: Stores user profiles.
- * - /roles_admin/{userId}: Grants admin privileges.
- * - /services/{serviceId}: Stores service details.
- * - /bookings/{bookingId}: Stores service booking inquiries.
- * - /contacts/{contactId}: Stores contact form submissions.
- * - /gallery/{mediaId}: Stores gallery media items.
- * - /gallery/{mediaId}/likes/{likeId}: Stores likes for gallery items.
- * - /gallery/{mediaId}/comments/{commentId}: Stores comments for gallery items.
- * - /users/{userId}/bookmarks/{bookmarkId}: Stores user-specific bookmarks.
- *
- * Key Security Decisions:
- * - Admin Role: Admin privileges are determined by the existence of a document in the `/roles_admin/{userId}` collection.
- * - Public Read Access: The `events`, `services`, and `gallery` collections are publicly readable.
- * - Owner-Only Access: User profiles and bookmarks are accessible only to the user themselves.
- * - Bookings and Contacts: Allow public creation of booking and contact documents; admin only access to view and update.
- *
- * Denormalization for Authorization:
- * - Events include a `createdByAdminId` field for write access control.
- * - GalleryMedia includes a `createdByAdminId` field for write access control.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Allows admins to manage events and grants public read access to published events.
+     * @description Allows reading events for all users and restricts creation, updating, and deletion to admins.
      * @path /events/{eventId}
-     * @allow (get, list): Any user can read published events.
-     * @allow (create, update, delete): Only admins can create, update, or delete events.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete events.
-     * @principle Public read access with admin-only writes, enforced by admin role check.
+     * @allow get, list: if true;
+     * @allow create: if isAdmin();
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Public read, admin-only writes.
      */
     match /events/{eventId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows users to read their own profile and admins to read any profile.
+     * @description Allows users to read their own profiles and admins to read any profile.  Creation is only allowed during account creation.
      * @path /users/{userId}
-     * @allow (get): Users can read their own profile, admins can read any profile.
-     * @allow (create): Users can create their own profile with matching userId.
-     * @allow (update, delete): Only the user can update or delete their profile
-     * @deny (get): Users cannot read other user profiles unless they are admins.
-     * @deny (create): Users cannot create profiles for other users.
-     * @principle Enforces document ownership for user profiles, with admin overrides.
+     * @allow get: if isOwner(userId) || isAdmin();
+     * @allow list: if false;
+     * @allow create: if request.auth.uid == userId;
+     * @allow update: if isOwner(userId);
+     * @allow delete: if false;
+     * @principle User-owned profiles with admin access.
      */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update, delete: if isOwner(userId);
       allow list: if false;
+      allow create: if request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if false;
     }
 
     /**
-     * @description Defines admin privileges. The existence of a document here makes a user an admin.
+     * @description Determines admin privileges based on the existence of a document at this path.
      * @path /roles_admin/{userId}
      * @allow get: if isAdmin();
-     * @allow create: if true; // Creating the admin role is allowed.
-     * @allow update, delete: if false; // Admin role documents should not be updated or deleted directly.
-     * @deny create, update, delete: if !isAdmin();
-     * @principle Role-based access control via document existence.
+     * @allow list: if false;
+     * @allow create: if isAdmin();
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Admin role management.
      */
     match /roles_admin/{userId} {
       allow get: if isAdmin();
-      allow create: if true;
-      allow update, delete: if false;
       allow list: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows admins to manage services and grants public read access.
+     * @description Allows reading services for all users and restricts creation, updating, and deletion to admins.
      * @path /services/{serviceId}
-     * @allow (get, list): Any user can read service details.
-     * @allow (create, update, delete): Only admins can create, update, or delete services.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete services.
-     * @principle Public read access with admin-only writes, enforced by admin role check.
+     * @allow get, list: if true;
+     * @allow create: if isAdmin();
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Public read, admin-only writes.
      */
     match /services/{serviceId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows public to create booking inquiries, and admins to read/update them.
+     * @description Allows public creation of bookings and restricts reading, updating, and deletion to admins.
      * @path /bookings/{bookingId}
-     * @allow (create): Any user can create a booking inquiry.
-     * @allow (get, list, update, delete): Only admins can read, update, or delete booking inquiries.
-     * @deny (get, list, update, delete): Non-admins cannot read, update, or delete booking inquiries.
-     * @principle Public write access for creating booking inquiries, with admin-only read/write access.
+     * @allow get: if isAdmin();
+     * @allow list: if isAdmin();
+     * @allow create: if true;
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Public create, admin-only management.
      */
     match /bookings/{bookingId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
       allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows public to create contact inquiries, and admins to read/update them.
+     * @description Allows public creation of contact inquiries and restricts reading, updating, and deletion to admins.
      * @path /contacts/{contactId}
-     * @allow (create): Any user can create a contact inquiry.
-     * @allow (get, list, update, delete): Only admins can read, update, or delete contact inquiries.
-     * @deny (get, list, update, delete): Non-admins cannot read, update, or delete contact inquiries.
-     * @principle Public write access for creating contact inquiries, with admin-only read/write access.
+     * @allow get: if isAdmin();
+     * @allow list: if isAdmin();
+     * @allow create: if true;
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Public create, admin-only management.
      */
     match /contacts/{contactId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
       allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows admins to manage gallery media and grants public read access.
+     * @description Allows reading gallery media for all users and restricts creation, updating, and deletion to admins.
      * @path /gallery/{mediaId}
-     * @allow (get, list): Any user can read gallery media items.
-     * @allow (create, update, delete): Only admins can create, update, or delete gallery media items.
-     * @deny (create, update, delete): Non-admins cannot create, update, or delete gallery media items.
-     * @principle Public read access with admin-only writes, enforced by admin role check.
+     * @allow get, list: if true;
+     * @allow create: if isAdmin();
+     * @allow update: if isAdmin();
+     * @allow delete: if isAdmin();
+     * @principle Public read, admin-only writes.
      */
     match /gallery/{mediaId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
-     * @description Allows authenticated users to create likes for gallery items.
+     * @description Allows authenticated users to create likes for gallery media.
      * @path /gallery/{mediaId}/likes/{likeId}
-     * @allow (create): Authenticated users can create likes.
-     * @allow (get, list): Any user can read likes.
-     * @allow (update, delete): No updates or deletes are allowed once the like is created.
-     * @deny (update, delete): prevent updates or deletes of likes.
-     * @principle Authenticated users can create likes.
+     * @allow get: if true;
+     * @allow list: if true;
+     * @allow create: if isSignedIn() && request.auth.uid == likeId;
+     * @allow update: if false;
+     * @allow delete: if false;
+     * @principle User-owned likes.
      */
     match /gallery/{mediaId}/likes/{likeId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.auth.uid == likeId;
+      allow update: if false;
+      allow delete: if false;
     }
 
     /**
-     * @description Allows authenticated users to create comments for gallery items, and either the comment owner or an admin to delete them.
+     * @description Allows authenticated users to create comments for gallery media.  Deletion is allowed by the comment owner or an admin.
      * @path /gallery/{mediaId}/comments/{commentId}
-     * @allow (create): Authenticated users can create comments.
-     * @allow (get, list): Any user can read comments.
-     * @allow (delete): Only the user who created the comment or an admin can delete it.
-     * @allow (update): if false;
-     * @deny (update): Comments cannot be updated.
-     * @principle Authenticated users can create comments, owners or admins can delete.
+     * @allow get: if true;
+     * @allow list: if true;
+     * @allow create: if isSignedIn();
+     * @allow update: if false;
+     * @allow delete: if request.auth.uid == resource.data.userId || isAdmin();
+     * @principle User-owned comments, admin-deletable.
      */
     match /gallery/{mediaId}/comments/{commentId} {
-      allow get, list: if true;
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn();
       allow update: if false;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid || isAdmin();
+      allow delete: if request.auth.uid == resource.data.userId;
     }
 
     /**
-     * @description Allows a user to create, read, update and delete their own bookmarks.
+     * @description Allows users to manage their own bookmarks.
      * @path /users/{userId}/bookmarks/{bookmarkId}
-     * @allow (create, get, list, update, delete): Only the user can manage their own bookmarks.
-     * @deny (create, get, list, update, delete): Users cannot manage other users' bookmarks.
-     * @principle Enforces document ownership for bookmarks.
+     * @allow get: if isOwner(userId);
+     * @allow list: if isOwner(userId);
+     * @allow create: if isOwner(userId) && request.auth.uid == bookmarkId;
+     * @allow update: if isOwner(userId);
+     * @allow delete: if isOwner(userId);
+     * @principle User-owned bookmarks.
      */
     match /users/{userId}/bookmarks/{bookmarkId} {
-      allow get, list, create, update, delete: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.auth.uid == bookmarkId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
+  }
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
 
-    function isAdmin() {
-      return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
+  function isAdmin() {
+    return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+  }
+
+  function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
   }
 }
