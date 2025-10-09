@@ -37,7 +37,7 @@ export default function HomePage() {
     return query(
       collection(firestore, 'announcements'),
       orderBy('createdAt', 'desc'),
-      limit(3)
+      limit(1)
     );
   }, [firestore]);
 
@@ -183,13 +183,12 @@ export default function HomePage() {
         {/* Latest Announcements Section */}
         <section className="py-16 lg:py-24 bg-card">
           <div className="container">
-            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Announcements</h2>
+            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Announcement</h2>
             <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Keep up with the latest news and updates from the cooperative.</p>
             
             {isLoadingAnnouncements && (
-              <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[...Array(3)].map((_, i) => (
-                  <Card key={i}>
+              <div className="mt-12 max-w-2xl mx-auto">
+                  <Card>
                     <CardHeader>
                       <Skeleton className="h-6 w-3/4" />
                       <Skeleton className="h-4 w-1/2 mt-2" />
@@ -199,18 +198,22 @@ export default function HomePage() {
                       <Skeleton className="h-4 w-5/6 mt-2" />
                     </CardContent>
                   </Card>
-                ))}
               </div>
             )}
             
             {!isLoadingAnnouncements && (
               <div className="mt-12">
                 {announcements && announcements.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="max-w-2xl mx-auto">
                     {announcements.map((announcement) => (
                       <Card key={announcement.id} className="overflow-hidden">
+                        {announcement.mediaUrl && (
+                            <div className="relative h-56 w-full">
+                                <Image src={announcement.mediaUrl} alt={announcement.title} fill style={{objectFit: 'cover'}} data-ai-hint="announcement photo"/>
+                            </div>
+                        )}
                         <CardHeader>
-                          <CardTitle className="truncate">{announcement.title}</CardTitle>
+                          <CardTitle>{announcement.title}</CardTitle>
                           <p className="text-sm text-muted-foreground">{new Date(announcement.createdAt.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         </CardHeader>
                         <CardContent>
@@ -220,9 +223,11 @@ export default function HomePage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground mt-12">
-                    No announcements right now. Check back soon!
-                  </p>
+                  <div className="text-center py-16 border-2 border-dashed rounded-lg max-w-2xl mx-auto">
+                    <Megaphone className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium text-muted-foreground">No Announcements Yet</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Please check back later for news and updates.</p>
+                </div>
                 )}
                 <div className="text-center mt-12">
                   <Button asChild>
@@ -335,5 +340,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
