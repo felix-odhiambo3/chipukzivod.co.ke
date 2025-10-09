@@ -210,6 +210,7 @@ export default function HomePage() {
               </div>
             )}
             
+
             {!isLoadingEvents && (
               <div className="mt-12">
                 {events && events.length > 0 ? (
@@ -242,6 +243,7 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+            
             
           </div>
         </section>
