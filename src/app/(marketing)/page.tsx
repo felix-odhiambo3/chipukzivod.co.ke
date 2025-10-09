@@ -12,6 +12,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import type { Event, Announcement } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import AnnouncementsPage from './announcements/page';
 
 const partnerLogos = PlaceHolderImages.filter(img => img.id.startsWith('partner'));
 
@@ -182,65 +183,10 @@ export default function HomePage() {
 
         {/* Latest Announcements Section */}
         <section className="py-16 lg:py-24 bg-card">
-          <div className="container">
-            <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Latest Announcement</h2>
-            <p className="mt-2 text-muted-foreground text-center max-w-xl mx-auto">Keep up with the latest news and updates from the cooperative.</p>
-            
-            {isLoadingAnnouncements && (
-              <div className="mt-12 max-w-2xl mx-auto">
-                  <Card>
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-1/2 mt-2" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6 mt-2" />
-                    </CardContent>
-                  </Card>
-              </div>
-            )}
-            
-            {/** */}
-            {!isLoadingAnnouncements && (
-              <div className="mt-12">
-                {announcements && announcements.length > 0 ? (
-                  <div className="max-w-2xl mx-auto">
-                    {announcements.map((announcement) => (
-                      <Card key={announcement.id} className="overflow-hidden">
-                        {announcement.mediaUrl && (
-                            <div className="relative h-56 w-full">
-                                <Image src={announcement.mediaUrl} alt={announcement.title} fill style={{objectFit: 'cover'}} data-ai-hint="announcement photo"/>
-                            </div>
-                        )}
-                        <CardHeader>
-                          <CardTitle>{announcement.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{new Date(announcement.createdAt.toDate()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground line-clamp-3">{announcement.content}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-16 border-2 border-dashed rounded-lg max-w-2xl mx-auto">
-                    <Megaphone className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium text-muted-foreground">No Announcements Yet</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">Please check back later for news and updates.</p>
-                </div>
-                )}
-                <div className="text-center mt-12">
-                  <Button asChild>
-                    <Link href="/announcements">View All Announcements <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                  </Button>
-                </div>
-              </div>
-            )}*/}
-          </div>
+          <AnnouncementsPage />
         </section>
 
-        {/* Latest Events Section 
+        {/* Latest Events Section */}
         <section className="py-16 lg:py-24">
           <div className="container">
             <h2 className="text-3xl font-bold font-headline text-center tracking-tight">Upcoming Events</h2>
