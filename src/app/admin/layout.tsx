@@ -39,6 +39,7 @@ const adminNavItems = [
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
     { href: "/admin/suggestions", icon: Lightbulb, label: "Suggestions", tooltip: "Member Suggestions" },
+    { href: "/admin/resources", icon: HelpingHand, label: "Manage Resources", tooltip: "Manage Resources" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
     { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },
@@ -176,9 +177,10 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}];
         if (pathname.match(/\/admin\/events\/edit\/.+/)) return "Edit Event";
         if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
+        if (pathname.match(/\/admin\/resources\/edit\/.+/)) return "Edit Resource";
 
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
         if (pathname.startsWith('/events/')) return "Event Details";

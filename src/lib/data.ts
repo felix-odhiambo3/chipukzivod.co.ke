@@ -104,3 +104,13 @@ export type Suggestion = {
     status: 'new' | 'viewed' | 'in-progress' | 'done';
     createdAt: any;
 };
+
+export type Resource = {
+    id: string;
+    title: string;
+    description: string;
+    fileUrl: string;
+    createdByAdminId: string;
+    createdAt: any;
+    updatedAt: any;
+};

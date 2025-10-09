@@ -277,6 +277,21 @@
             "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["suggestion", "isAnonymous", "userId", "userName", "status"]
+    },
+    "Resource": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Resource",
+      "description": "Represents a downloadable resource (e.g., PDF).",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "fileUrl": { "type": "string", "format": "uri" },
+        "createdByAdminId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "fileUrl", "createdByAdminId"]
     }
   },
   "auth": {
@@ -384,6 +399,14 @@
               "entityName": "Suggestion",
               "schema": { "$ref": "#/entities/Suggestion" },
               "description": "Stores member suggestions. Writable by authenticated users, readable/updatable by admins."
+          }
+      },
+       {
+          "path": "/resources/{resourceId}",
+          "definition": {
+              "entityName": "Resource",
+              "schema": { "$ref": "#/entities/Resource" },
+              "description": "Stores downloadable resources. Readable by authenticated users, writable by admins."
           }
       }
     ]
