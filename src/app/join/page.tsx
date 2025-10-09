@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +12,9 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { createUser, type UserFormData } from '@/app/admin/users/actions';
+import { useAuth, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -24,6 +25,8 @@ const formSchema = z.object({
 export default function JoinPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,34 +38,59 @@ export default function JoinPage() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const role = values.email.toLowerCase() === 'admin@chipukizivod.co.ke' ? 'admin' : 'member';
-    
-    if (role === 'admin' && values.password !== 'AdminPassword123') {
-        toast({
-            variant: 'destructive',
-            title: 'Registration Failed',
-            description: 'Invalid password for admin account.',
-        });
-        return;
+    if (!auth || !firestore) {
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: "Could not connect to services. Please try again.",
+      });
+      return;
     }
 
-    const userData: UserFormData = {
-      ...values,
-      role,
-    };
     try {
-      await createUser(userData);
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      // 2. Update user profile in Firebase Auth
+      await updateProfile(user, {
+        displayName: values.displayName,
+      });
+
+      // 3. Determine role
+      const role = values.email.toLowerCase() === 'admin@chipukizivod.co.ke' && values.password === 'AdminPassword123' 
+        ? 'admin' 
+        : 'member';
+
+      // 4. Create user document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+        displayName: values.displayName,
+        email: values.email,
+        role: role,
+        photoURL: '', // Default empty photoURL
+      });
+      
+      // Note: Setting custom claims for roles requires a backend function (like a Cloud Function).
+      // The 'role' field in Firestore will be used for client-side logic.
+      // For this implementation, we assume a Cloud Function will later sync this role to a custom claim.
+
       toast({
         title: 'Account Created!',
         description: "Welcome! We're redirecting you to the login page.",
       });
       router.push('/login');
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error creating user:', error);
+      let description = 'Could not create your account. Please try again.';
+      if (error.code === 'auth/email-already-in-use') {
+        description = 'An account with this email already exists.';
+      }
       toast({
         variant: 'destructive',
         title: 'Registration Failed',
-        description: error instanceof Error ? error.message : 'Could not create your account. The email might already be in use.',
+        description: description,
       });
     }
   };
