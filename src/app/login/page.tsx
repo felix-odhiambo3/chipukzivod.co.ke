@@ -121,7 +121,7 @@ export default function LoginPage() {
                   <FormItem className="grid gap-2">
                     <div className="flex items-center">
                       <Label htmlFor="password">Password</Label>
-                      <Link href="#" className="ml-auto inline-block text-sm underline hover:text-primary">
+                      <Link href="/forgot-password" className="ml-auto inline-block text-sm underline hover:text-primary">
                         Forgot password?
                       </Link>
                     </div>
