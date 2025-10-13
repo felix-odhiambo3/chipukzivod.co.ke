@@ -31,7 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { collection, query, orderBy, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, doc, updateDoc, arrayUnion, writeBatch } from 'firebase/firestore';
 import type { Notification } from '@/lib/data';
 
 const memberNavItems = [
@@ -40,6 +40,7 @@ const memberNavItems = [
   { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", badge: "3", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
   { href: "/dashboard/suggestion-box", icon: Lightbulb, label: "Suggestion Box", tooltip: "Suggestion Box" },
+  { href: "/dashboard/chat", icon: MessageSquare, label: "Live Chat", tooltip: "Live Chat" },
 ];
 
 const adminNavItems = [
@@ -208,6 +209,7 @@ function AppHeaderContent() {
     const pathname = usePathname();
     const { user } = useUser();
     const firestore = useFirestore();
+    const router = useRouter();
     const [popoverOpen, setPopoverOpen] = useState(false);
 
     const notificationsQuery = useMemoFirebase(() =>

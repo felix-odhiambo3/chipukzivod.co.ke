@@ -41,6 +41,7 @@ const memberNavItems = [
   { href: "/dashboard/announcements", icon: Megaphone, label: "Announcements", tooltip: "Announcements" },
   { href: "/dashboard/resources", icon: HelpingHand, label: "Resources", tooltip: "Resources" },
   { href: "/dashboard/suggestion-box", icon: Lightbulb, label: "Suggestion Box", tooltip: "Suggestion Box" },
+  { href: "/dashboard/chat", icon: MessageSquare, label: "Live Chat", tooltip: "Live Chat" },
 ];
 
 const adminNavItems = [
