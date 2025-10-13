@@ -1,6 +1,7 @@
+
 'use client';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, where } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
@@ -10,6 +11,7 @@ import type { GalleryMedia } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 const MediaCard = ({ item }: { item: GalleryMedia }) => {
   const isYoutube = item.type === 'youtube';
@@ -85,28 +87,23 @@ const GallerySkeleton = () => (
 export default function GalleryPage() {
   const firestore = useFirestore();
 
-  const mediaQuery = useMemoFirebase(() =>
+  const galleryQuery = useMemoFirebase(() =>
     firestore
       ? query(
           collection(firestore, 'gallery'),
-          where('type', 'in', ['image', 'video']),
           orderBy('createdAt', 'desc')
         )
       : null
   , [firestore]);
 
-  const youtubeQuery = useMemoFirebase(() =>
-    firestore
-      ? query(
-          collection(firestore, 'gallery'),
-          where('type', '==', 'youtube'),
-          orderBy('createdAt', 'desc')
-        )
-      : null
-  , [firestore]);
+  const { data: allItems, isLoading } = useCollection<GalleryMedia>(galleryQuery);
 
-  const { data: mediaItems, isLoading: loadingMedia } = useCollection<GalleryMedia>(mediaQuery);
-  const { data: youtubeItems, isLoading: loadingYoutube } = useCollection<GalleryMedia>(youtubeQuery);
+  const { mediaItems, youtubeItems } = useMemo(() => {
+    if (!allItems) return { mediaItems: [], youtubeItems: [] };
+    const mediaItems = allItems.filter(item => item.type === 'image' || item.type === 'video');
+    const youtubeItems = allItems.filter(item => item.type === 'youtube');
+    return { mediaItems, youtubeItems };
+  }, [allItems]);
 
   return (
     <div className="container py-12 md:py-16">
@@ -124,7 +121,7 @@ export default function GalleryPage() {
         </TabsList>
 
         <TabsContent value="uploads" className="mt-8">
-          {loadingMedia ? (
+          {isLoading ? (
             <GallerySkeleton />
           ) : mediaItems?.length ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -138,7 +135,7 @@ export default function GalleryPage() {
         </TabsContent>
 
         <TabsContent value="youtube" className="mt-8">
-          {loadingYoutube ? (
+          {isLoading ? (
             <GallerySkeleton />
           ) : youtubeItems?.length ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
