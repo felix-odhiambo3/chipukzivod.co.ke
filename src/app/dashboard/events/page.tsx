@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
@@ -66,32 +66,31 @@ function EventsLoadingSkeleton() {
 export default function EventsPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const firestore = useFirestore();
-  const now = new Date().toISOString();
 
-  const upcomingEventsQuery = useMemoFirebase(() => {
+  const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(
       collection(firestore, 'events'), 
-      where('status', '==', "published"),
-      where('startDatetime', '>=', now),
-      orderBy('startDatetime', 'asc')
+      where('status', '==', "published")
     );
-  }, [firestore, now]);
+  }, [firestore]);
 
-  const pastEventsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-      collection(firestore, 'events'), 
-      where('status', '==', "published"),
-      where('startDatetime', '<', now),
-      orderBy('startDatetime', 'desc')
-    );
-  }, [firestore, now]);
+  const { data: allEvents, isLoading } = useCollection<Event>(eventsQuery);
 
-  const { data: upcomingEvents, isLoading: isLoadingUpcoming } = useCollection<Event>(upcomingEventsQuery);
-  const { data: pastEvents, isLoading: isLoadingPast } = useCollection<Event>(pastEventsQuery);
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    if (!allEvents) {
+      return { upcomingEvents: [], pastEvents: [] };
+    }
+    const now = new Date();
+    const upcoming = allEvents
+      .filter(event => new Date(event.startDatetime) >= now)
+      .sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime());
+    const past = allEvents
+      .filter(event => new Date(event.startDatetime) < now)
+      .sort((a, b) => new Date(b.startDatetime).getTime() - new Date(a.startDatetime).getTime());
+    return { upcomingEvents: upcoming, pastEvents: past };
+  }, [allEvents]);
 
-  const isLoading = isLoadingUpcoming || isLoadingPast;
 
   const renderContent = () => {
     if (isLoading) {
@@ -164,5 +163,3 @@ export default function EventsPage() {
     </div>
   );
 }
-
-    
