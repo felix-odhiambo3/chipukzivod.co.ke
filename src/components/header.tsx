@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { Logo } from './logo';
 import Image from 'next/image';
+import { useUser } from '@/firebase';
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -18,6 +19,8 @@ const navLinks = [
 ];
 
 export function Header() {
+  const { user } = useUser();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center">
@@ -32,12 +35,20 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button asChild variant="ghost">
-            <Link href="/login">Member Login</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard">Go to Dashboard</Link>
-          </Button>
+          {!user ? (
+            <Button asChild variant="ghost">
+              <Link href="/login">Member Login</Link>
+            </Button>
+          ) : null}
+           {user ? (
+            <Button asChild>
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          ) : (
+             <Button asChild>
+                <Link href="/join">Join Us</Link>
+            </Button>
+          )}
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -69,5 +80,3 @@ export function Header() {
     </header>
   );
 }
-
-    
