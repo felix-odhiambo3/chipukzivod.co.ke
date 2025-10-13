@@ -1,7 +1,7 @@
 
 'use server';
 
-import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
+import { getApps, initializeApp, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
@@ -106,7 +106,15 @@ export async function deleteUser(uid: string) {
 }
 
 export async function sendPasswordReset(email: string) {
-  const link = await adminAuth.generatePasswordResetLink(email);
+  const actionCodeSettings = {
+    // URL you want to redirect back to. The domain (www.example.com) for this
+    // URL must be whitelisted in the Firebase Console.
+    url: `${process.env.NEXT_PUBLIC_BASE_URL}/login`,
+    // This must be true.
+    handleCodeInApp: true,
+  };
+
+  const link = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
   console.log('Password reset link for admin action:', link);
   // In a real app, you would use an email service to send this link.
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
