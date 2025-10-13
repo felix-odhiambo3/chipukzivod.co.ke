@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -50,11 +51,12 @@ export default function HomePage() {
         const q = query(
           collection(firestore, 'events'),
           where('status', '==', 'published'),
-          orderBy('startDatetime', 'asc'),
           limit(3)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Event[];
+        // Sort events on the client side
+        data.sort((a, b) => new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime());
         setEvents(data);
       } catch (error) {
         console.error('Error fetching events:', error);
