@@ -135,37 +135,14 @@ function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-             <Link href="/dashboard">
-                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Dashboard">
+             <Link href="/admin">
+                <SidebarMenuButton isActive={pathname === '/admin'} tooltip="Admin Dashboard">
                   <LayoutDashboard />
-                  <span>Dashboard</span>
+                  <span>Admin Dashboard</span>
                 </SidebarMenuButton>
               </Link>
           </SidebarMenuItem>
         </SidebarMenu>
-        <Collapsible open={memberToolsOpen} onOpenChange={setMemberToolsOpen} className="w-full">
-            <CollapsibleTrigger asChild>
-                <SidebarMenuButton className="w-full justify-start mt-4" >
-                    Member Tools
-                    <ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", memberToolsOpen && "rotate-180")} />
-                </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                <SidebarMenu className="mt-2">
-                  {memberNavItems.slice(1).map((item) => (
-                    <SidebarMenuItem key={item.label}>
-                      <Link href={item.href}>
-                        <SidebarMenuButton isActive={isActive(item.href)} tooltip={item.tooltip}>
-                          <item.icon />
-                          <span>{item.label}</span>
-                          {item.badge && <span className="ml-auto bg-primary text-primary-foreground text-xs font-semibold px-2 py-0.5 rounded-full">{item.badge}</span>}
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-            </CollapsibleContent>
-        </Collapsible>
         
         {user?.role === "admin" && (
             <>
@@ -244,7 +221,7 @@ function AppHeaderContent() {
     };
 
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}, {href: "/admin/announcements/new", label: "New Announcement"}, {href: "/admin/notifications/new", label: "New Notification"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin", label: "Admin Dashboard"}, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}, {href: "/admin/announcements/new", label: "New Announcement"}, {href: "/admin/notifications/new", label: "New Notification"}];
         if (pathname.match(/\/admin\/events\/edit\/.+/)) return "Edit Event";
         if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
         if (pathname.match(/\/admin\/resources\/edit\/.+/)) return "Edit Resource";
@@ -253,9 +230,8 @@ function AppHeaderContent() {
         if (pathname.match(/\/events\/.+/)) return "Event Details";
 
 
-        const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/");
-        if (pathname.startsWith('/events/')) return "Event Details";
-        return currentItem?.label || "Dashboard";
+        const currentItem = allItems.find(item => pathname === item.href);
+        return currentItem?.label || "Admin";
     }, [pathname]);
 
     return (
@@ -344,25 +320,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || user?.role !== 'admin') {
+  if (isUserLoading || !user) {
+     return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
+  if (user.role !== 'admin') {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        {isUserLoading ? (
-            <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <Skeleton className="h-8 w-8" />
-                    <Skeleton className="h-6 w-32" />
-                </div>
-                <Skeleton className="h-96 w-screen max-w-4xl" />
-            </div>
-        ) : (
           <div className="text-center">
             <ShieldAlert className="mx-auto h-16 w-16 text-destructive" />
             <h1 className="mt-4 text-2xl font-bold font-headline">Access Denied</h1>
             <p className="mt-2 text-muted-foreground">You do not have permission to view this page.</p>
             <p className="mt-1 text-sm text-muted-foreground">Redirecting to your dashboard...</p>
           </div>
-        )}
       </div>
     );
   }

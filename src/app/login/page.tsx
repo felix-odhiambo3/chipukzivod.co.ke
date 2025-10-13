@@ -15,8 +15,10 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import type { AuthError } from 'firebase/auth';
+import { useEffect, useCallback } from 'react';
+import type { AuthError, User } from 'firebase/auth';
+import { updateUser } from '../admin/users/actions';
+import { getIdTokenResult } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -36,12 +38,51 @@ export default function LoginPage() {
       password: '',
     },
   });
+  
+  // This function will handle user promotion and redirection
+  const handleLoginSuccess = useCallback(async (loggedInUser: User) => {
+    // ONE-TIME-ONLY: Check if this is the designated admin email
+    if (loggedInUser.email === 'admin@chipukizivod.co.ke') {
+      try {
+        // Securely set the custom claim on the server
+        await updateUser(loggedInUser.uid, { role: 'admin' });
+        
+        // Force refresh the token to get the new custom claim immediately
+        const idTokenResult = await getIdTokenResult(loggedInUser, true); 
+        
+        if (idTokenResult.claims.role === 'admin') {
+          toast({
+            title: 'Admin Promotion Success',
+            description: 'Your account has been promoted to Admin.',
+          });
+          router.replace('/admin'); // Redirect to admin dashboard
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to promote admin:", error);
+        toast({
+          variant: "destructive",
+          title: 'Admin Promotion Failed',
+          description: 'Could not set admin role. Please contact support.',
+        });
+      }
+    }
+
+    // For all other users, or if admin promotion fails, check role and redirect
+    const idTokenResult = await getIdTokenResult(loggedInUser);
+    if (idTokenResult.claims.role === 'admin') {
+      router.replace('/admin');
+    } else {
+      router.replace('/dashboard');
+    }
+  }, [router, toast]);
+
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.replace('/dashboard');
+      handleLoginSuccess(user);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, handleLoginSuccess]);
 
   useEffect(() => {
     const handleAuthError = (error: AuthError) => {
