@@ -45,7 +45,6 @@ const adminNavItems = [
     { href: "/admin/resources", icon: HelpingHand, label: "Manage Resources", tooltip: "Manage Resources" },
     { href: "/admin/content-suggestions", icon: PenSquare, label: "Content AI", tooltip: "Content AI" },
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
-    { href: "/admin/site-settings", icon: Palette, label: "Site Settings", tooltip: "Site Settings" },
 ];
 
 function AppSidebar() {

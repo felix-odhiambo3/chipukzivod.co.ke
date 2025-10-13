@@ -1,4 +1,3 @@
-
 'use client';
 import {
   SidebarProvider,
@@ -200,7 +199,7 @@ function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/settings", label: "Settings"}];
         if (pathname.startsWith('/dashboard/events/')) return "Event Details";
         const currentItem = allItems.find(item => pathname.startsWith(item.href) && item.href !== "/dashboard");
         return currentItem?.label || "Dashboard";
@@ -234,7 +233,7 @@ function AppHeaderContent() {
     )
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
