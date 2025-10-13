@@ -19,6 +19,7 @@ import type { UserProfile } from '@/lib/data';
 import {
   deleteUser,
   sendPasswordReset,
+  updateUser,
   type UserFormData,
 } from './actions';
 import {
@@ -51,6 +52,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 function UserActions({ user }: { user: UserProfile }) {
   const { toast } = useToast();
@@ -86,7 +94,7 @@ function UserActions({ user }: { user: UserProfile }) {
       await sendPasswordReset(user.email);
       toast({
         title: 'Password Reset Email Sent',
-        description: `An email has been sent to ${user.email}.`,
+        description: `A password reset link has been generated. Check server logs.`,
       });
     } catch (error) {
       toast({
@@ -133,7 +141,7 @@ function UserActions({ user }: { user: UserProfile }) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -158,6 +166,7 @@ function UserActions({ user }: { user: UserProfile }) {
 export default function ManageUsersPage() {
   const firestore = useFirestore();
   const [isCreateFormOpen, setIsCreateFormOpen] = React.useState(false);
+  const { toast } = useToast();
 
   const usersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -166,13 +175,31 @@ export default function ManageUsersPage() {
 
   const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
+  const handleRoleChange = async (uid: string, newRole: 'admin' | 'member') => {
+    try {
+      await updateUser(uid, { role: newRole });
+      toast({
+        title: 'Role Updated',
+        description: `User role has been successfully changed to ${newRole}.`,
+      });
+    } catch (error) {
+      console.error('Failed to update role:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description:
+          error instanceof Error ? error.message : 'Could not update user role.',
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-headline">Manage Users</h1>
           <p className="text-muted-foreground">
-            Create, edit, and manage user accounts.
+            Create, edit, and manage user accounts and roles.
           </p>
         </div>
         <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
@@ -215,7 +242,7 @@ export default function ManageUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-8 w-24" />
                     </TableCell>
                     <TableCell className="text-right">
                       <Skeleton className="h-8 w-8 ml-auto" />
@@ -242,9 +269,18 @@ export default function ManageUsersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role}
-                      </Badge>
+                      <Select
+                        defaultValue={user.role}
+                        onValueChange={(value: 'admin' | 'member') => handleRoleChange(user.id, value)}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="member">Member</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       <UserActions user={user} />
