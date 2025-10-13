@@ -5,6 +5,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   AuthError,
+  setPersistence,
+  browserSessionPersistence,
 } from 'firebase/auth';
 
 /**
@@ -43,7 +45,10 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password)
+  setPersistence(authInstance, browserSessionPersistence)
+    .then(() => {
+      return signInWithEmailAndPassword(authInstance, email, password);
+    })
     .catch(error => {
       authErrorEmitter.emit(error);
     });
