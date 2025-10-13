@@ -1,10 +1,11 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Event } from '@/lib/data';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
@@ -76,12 +77,15 @@ export default function PublicEventsPage() {
       try {
         const q = query(
           collection(firestore, 'events'),
-          where('status', '==', 'published'),
-          orderBy('startDatetime', 'desc')
+          where('status', '==', 'published')
         );
 
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Event & { id: string }));
+        
+        // Sort events on the client side
+        data.sort((a, b) => new Date(b.startDatetime).getTime() - new Date(a.startDatetime).getTime());
+        
         setEvents(data);
       } catch (err: any) {
         console.error('Firestore read error:', err);
