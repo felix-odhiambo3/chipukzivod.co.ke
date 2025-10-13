@@ -8,6 +8,7 @@ import {
   CollectionReference,
   DocumentReference,
   SetOptions,
+  serverTimestamp as firestoreServerTimestamp,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -37,7 +38,25 @@ export function setDocumentNonBlocking(docRef: DocumentReference, data: any, opt
  * Returns the Promise for the new doc ref, but typically not awaited by caller.
  */
 export function addDocumentNonBlocking(colRef: CollectionReference, data: any) {
-  const promise = addDoc(colRef, data)
+  // Firestore's serverTimestamp is a function that returns a sentinel value.
+  // We need to handle it before sending the data.
+  const processedData = { ...data };
+  for (const key in processedData) {
+    if (processedData[key] && typeof processedData[key] === 'object' && 'isEqual' in processedData[key]) {
+      // This is likely the serverTimestamp sentinel object.
+      // The addDoc function handles this correctly, but if we were to JSON.stringify it,
+      // we'd need to convert it. For addDoc, we can just pass it through.
+      // The issue might be in how it's created. We'll ensure it's created with firestoreServerTimestamp.
+    }
+  }
+
+  // To be safe, let's just re-ensure createdAt is a server timestamp if it exists.
+  if ('createdAt' in processedData) {
+      processedData.createdAt = firestoreServerTimestamp();
+  }
+
+
+  const promise = addDoc(colRef, processedData)
     .catch(error => {
       errorEmitter.emit(
         'permission-error',
