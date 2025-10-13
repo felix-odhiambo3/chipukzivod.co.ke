@@ -1,35 +1,21 @@
 
 'use server';
 
-import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
+import { getApps, initializeApp, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 
-// This is a simplified check for a Google Cloud environment.
-const isGoogleCloud = !!process.env.GCP_PROJECT;
-
+// Initialize Firebase Admin SDK
 let adminApp: App;
 if (!getApps().length) {
-    if (isGoogleCloud) {
-        // In a Google Cloud environment, the SDK can auto-discover credentials.
-        adminApp = initializeApp();
-    } else {
-        // For local development, you MUST set the GOOGLE_APPLICATION_CREDENTIALS
-        // environment variable to point to your service account key file.
-        // We will try to initialize without it, but it will likely fail if not on GCP.
-        try {
-            adminApp = initializeApp();
-        } catch (e) {
-            console.error("Firebase Admin initialization failed. If you are developing locally, please ensure the GOOGLE_APPLICATION_CREDENTIALS environment variable is set.", e);
-            // We throw an error here because admin actions will not work without proper initialization.
-            throw new Error("Firebase Admin SDK initialization failed.");
-        }
-    }
+  // The SDK will automatically use Google Application Default Credentials
+  // in a supported environment (like Firebase App Hosting), so no explicit
+  // credential configuration is needed.
+  adminApp = initializeApp();
 } else {
-    adminApp = getApps()[0];
+  adminApp = getApps()[0];
 }
-
 
 const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
