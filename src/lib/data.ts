@@ -126,4 +126,12 @@ export type Announcement = {
     updatedAt: any;
 };
 
+export type Notification = {
+    id: string;
+    title: string;
+    message: string;
+    link?: string;
+    createdAt: any;
+    readBy: string[]; // Array of user UIDs who have read the notification
+};
     

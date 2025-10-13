@@ -18,14 +18,21 @@ import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, User
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { collection, query, orderBy, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import type { Notification } from '@/lib/data';
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -38,6 +45,7 @@ const memberNavItems = [
 const adminNavItems = [
     { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
     { href: "/admin/announcements", icon: Megaphone, label: "Manage Announcements", tooltip: "Manage Announcements" },
+    { href: "/admin/notifications", icon: Bell, label: "Manage Notifications", tooltip: "Manage Notifications" },
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
     { href: "/admin/bookings", icon: MessageSquare, label: "Manage Bookings", tooltip: "Manage Bookings" },
     { href: "/admin/contacts", icon: Mail, label: "Contact Inquiries", tooltip: "Contact Inquiries" },
@@ -198,12 +206,48 @@ function AppSidebar() {
 function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [popoverOpen, setPopoverOpen] = useState(false);
+
+    const notificationsQuery = useMemoFirebase(() =>
+        firestore
+            ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
+            : null
+    , [firestore]);
+
+    const { data: notifications } = useCollection<Notification>(notificationsQuery);
+
+    const unreadNotifications = React.useMemo(() => {
+        if (!notifications || !user) return [];
+        return notifications.filter(n => !n.readBy.includes(user.uid));
+    }, [notifications, user]);
+
+    const handleMarkAsRead = async (notificationId: string) => {
+        if (!firestore || !user) return;
+        const notifRef = doc(firestore, 'notifications', notificationId);
+        await updateDoc(notifRef, {
+            readBy: arrayUnion(user.uid)
+        });
+    };
+
+    const handleMarkAllAsRead = async () => {
+        if (!firestore || !user || unreadNotifications.length === 0) return;
+        const batch = writeBatch(firestore);
+        unreadNotifications.forEach(notif => {
+            const notifRef = doc(firestore, 'notifications', notif.id);
+            batch.update(notifRef, { readBy: arrayUnion(user.uid) });
+        });
+        await batch.commit();
+    };
+
     const pageTitle = React.useMemo(() => {
-        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}, {href: "/admin/announcements/new", label: "New Announcement"}];
+        const allItems = [...memberNavItems, ...adminNavItems, {href: "/admin/events/new", label: "New Event"}, {href: "/admin/services/new", label: "New Service"}, {href: "/admin/users/new", label: "New User"}, {href: "/admin/resources/new", label: "New Resource"}, {href: "/admin/announcements/new", label: "New Announcement"}, {href: "/admin/notifications/new", label: "New Notification"}];
         if (pathname.match(/\/admin\/events\/edit\/.+/)) return "Edit Event";
         if (pathname.match(/\/admin\/services\/edit\/.+/)) return "Edit Service";
         if (pathname.match(/\/admin\/resources\/edit\/.+/)) return "Edit Resource";
         if (pathname.match(/\/admin\/announcements\/edit\/.+/)) return "Edit Announcement";
+        if (pathname.match(/\/admin\/notifications\/edit\/.+/)) return "Edit Notification";
         if (pathname.match(/\/events\/.+/)) return "Event Details";
 
 
@@ -219,10 +263,58 @@ function AppHeaderContent() {
               <h1 className="text-lg font-semibold font-headline">{pageTitle}</h1>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
-              <Button variant="ghost" size="icon">
-                <Bell className="h-5 w-5" />
-                <span className="sr-only">Notifications</span>
-              </Button>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                         <Button variant="ghost" size="icon" className="relative">
+                            <Bell className="h-5 w-5" />
+                            {unreadNotifications.length > 0 && (
+                                <span className="absolute top-1 right-1 flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                            )}
+                            <span className="sr-only">Notifications</span>
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="end">
+                         <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-medium text-sm">Notifications</h4>
+                            {unreadNotifications.length > 0 && (
+                                <Button variant="link" size="sm" className="h-auto p-0" onClick={handleMarkAllAsRead}>Mark all as read</Button>
+                            )}
+                        </div>
+                        <div className="grid gap-1">
+                           {notifications?.length ? (
+                                notifications.slice(0, 5).map(notification => {
+                                    const isUnread = unreadNotifications.some(un => un.id === notification.id);
+                                    return (
+                                        <div
+                                            key={notification.id}
+                                            className={cn(
+                                                "-m-2 flex items-start rounded-lg p-2 transition-all",
+                                                notification.link ? "hover:bg-accent hover:text-accent-foreground cursor-pointer" : "cursor-default"
+                                            )}
+                                            onClick={() => {
+                                                if (isUnread) handleMarkAsRead(notification.id);
+                                                if (notification.link) router.push(notification.link);
+                                                setPopoverOpen(false);
+                                            }}
+                                        >
+                                            {isUnread && <span className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
+                                            <div className="ml-2 space-y-1">
+                                                <p className="text-sm font-medium leading-none">{notification.title}</p>
+                                                <p className="text-sm text-muted-foreground">{notification.message}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                           ) : (
+                             <p className="text-sm text-muted-foreground text-center py-4">No notifications yet.</p>
+                           )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
               <Link href="/settings">
                 <Button variant="ghost" size="icon">
                   <Cog className="h-5 w-5" />

@@ -307,6 +307,24 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "content", "createdByAdminId"]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "description": "Represents a site-wide notification for users.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "link": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "readBy": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "An array of user IDs who have read this notification."
+        }
+      },
+      "required": ["title", "message", "createdAt", "readBy"]
     }
   },
   "auth": {
@@ -431,9 +449,16 @@
             "schema": { "$ref": "#/entities/Announcement" },
             "description": "Stores general announcements. Publicly readable, admin-writable."
         }
+      },
+      {
+        "path": "/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": { "$ref": "#/entities/Notification" },
+          "description": "Stores site-wide notifications. Readable by authenticated users, writable by admins."
+        }
       }
     ]
   }
 }
-
     
