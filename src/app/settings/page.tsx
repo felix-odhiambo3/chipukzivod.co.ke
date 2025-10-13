@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useUser } from '@/firebase';
@@ -23,48 +24,49 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore } from '@/firebase';
-import { deleteUser } from 'firebase/auth';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { deleteUser } from '@/app/admin/users/actions';
 import { ThemeSettings } from './theme-settings';
 
 function DeleteAccountSection() {
   const { user } = useUser();
   const auth = useAuth();
-  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
   const handleDeleteAccount = async () => {
-    if (!user || !auth || !firestore) {
+    if (!user || !auth) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not delete account. Please try again.',
+        description: 'You must be logged in to delete an account.',
       });
       return;
     }
 
     try {
-      // First, delete Firestore document
-      const userDocRef = doc(firestore, 'users', user.uid);
-      await deleteDoc(userDocRef);
+      // Call the secure server action to delete the user
+      const result = await deleteUser(user.uid);
 
-      // Then, delete the user from Firebase Auth
-      await deleteUser(user);
-
-      toast({
-        title: 'Account Deleted',
-        description: 'Your account has been permanently deleted.',
-      });
-      router.push('/'); // Redirect to home page
+      if (result.success) {
+        toast({
+          title: 'Account Deleted',
+          description: 'Your account has been permanently deleted.',
+        });
+        // Manually sign out the user on the client, as the server action doesn't affect the client's auth state
+        await signOut(auth);
+        router.push('/'); // Redirect to home page
+        router.refresh(); // Force a refresh to clear any lingering client-side state
+      } else {
+        throw new Error(result.error || 'An unknown error occurred.');
+      }
     } catch (error: any) {
       console.error('Error deleting account:', error);
       toast({
         variant: 'destructive',
         title: 'Deletion Failed',
-        description:
-          'An error occurred while deleting your account. You may need to log out and log back in to complete this action.',
+        description: `An error occurred while deleting your account: ${error.message}`,
       });
     }
   };

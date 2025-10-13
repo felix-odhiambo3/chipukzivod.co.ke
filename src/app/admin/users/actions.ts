@@ -107,13 +107,19 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
 }
 
 export async function deleteUser(uid: string) {
-  // Delete from Firebase Auth
-  await adminAuth.deleteUser(uid);
-
-  // Delete from Firestore
-  await adminDb.collection('users').doc(uid).delete();
-
-  return { uid };
+    // Note: This is an admin action. Client-side deletion should be handled
+    // by having the client call a secure backend endpoint that verifies
+    // ownership before calling this.
+    try {
+        // Delete from Firestore first
+        await adminDb.collection('users').doc(uid).delete();
+        // Then delete from Auth
+        await adminAuth.deleteUser(uid);
+        return { success: true, uid };
+    } catch (error: any) {
+        console.error(`Failed to delete user ${uid}:`, error);
+        return { success: false, error: error.message };
+    }
 }
 
 export async function sendPasswordReset(email: string) {
