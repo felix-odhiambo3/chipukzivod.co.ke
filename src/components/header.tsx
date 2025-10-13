@@ -7,6 +7,7 @@ import { Menu } from 'lucide-react';
 import { Logo } from './logo';
 import Image from 'next/image';
 import { useUser } from '@/firebase';
+import { Skeleton } from './ui/skeleton';
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -19,7 +20,7 @@ const navLinks = [
 ];
 
 export function Header() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
@@ -35,7 +36,12 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {user ? (
+          {isUserLoading ? (
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-24" />
+              <Skeleton className="h-9 w-20" />
+            </div>
+          ) : user ? (
             <Button asChild>
               <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
