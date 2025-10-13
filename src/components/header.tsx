@@ -35,19 +35,19 @@ export function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-          {!user ? (
-            <Button asChild variant="ghost">
-              <Link href="/login">Member Login</Link>
-            </Button>
-          ) : null}
-           {user ? (
+          {user ? (
             <Button asChild>
               <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : (
-             <Button asChild>
+            <>
+              <Button asChild variant="ghost">
+                <Link href="/login">Member Login</Link>
+              </Button>
+              <Button asChild>
                 <Link href="/join">Join Us</Link>
-            </Button>
+              </Button>
+            </>
           )}
           <div className="md:hidden">
             <Sheet>
