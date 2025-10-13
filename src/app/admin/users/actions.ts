@@ -1,17 +1,17 @@
 
 'use server';
 
-import { getApps, initializeApp, App } from 'firebase-admin/app';
+import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 
-// Initialize Firebase Admin SDK
+// Securely initialize Firebase Admin SDK
 let adminApp: App;
 if (!getApps().length) {
-  // The SDK will automatically use Google Application Default Credentials
-  // in a supported environment (like Firebase App Hosting), so no explicit
-  // credential configuration is needed.
+  // In a deployed environment (like Firebase App Hosting), the SDK
+  // will automatically use Google Application Default Credentials.
+  // No explicit credential configuration is needed.
   adminApp = initializeApp();
 } else {
   adminApp = getApps()[0];
@@ -30,7 +30,6 @@ const userFormSchema = z.object({
 
 export type UserFormData = z.infer<typeof userFormSchema>;
 
-// This function is now only used by the admin panel to create users, not the public join page.
 export async function createUser(data: UserFormData) {
   const validation = userFormSchema.safeParse(data);
   if (!validation.success) {
@@ -58,7 +57,7 @@ export async function createUser(data: UserFormData) {
     email: data.email,
     displayName: data.displayName,
     photoURL: data.photoURL,
-    role: data.role,
+    role: data.role, // Storing role here is for client-side display convenience
   });
 
   return { uid: userRecord.uid };
@@ -76,13 +75,14 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
   }
 
   if (role) {
+    // Securely update the custom claim
     await adminAuth.setCustomUserClaims(uid, { role });
   }
 
   const dbUpdates: any = {};
   if (displayName) dbUpdates.displayName = displayName;
   if (photoURL !== undefined) dbUpdates.photoURL = photoURL;
-  if (role) dbUpdates.role = role;
+  if (role) dbUpdates.role = role; // Also update Firestore doc for consistency
   
   if (Object.keys(dbUpdates).length > 0) {
       const userDocRef = adminDb.collection('users').doc(uid);
@@ -93,14 +93,11 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
 }
 
 export async function deleteUser(uid: string) {
-    // Note: This is an admin action. Client-side deletion should be handled
-    // by having the client call a secure backend endpoint that verifies
-    // ownership before calling this.
     try {
-        // Delete from Firestore first
-        await adminDb.collection('users').doc(uid).delete();
-        // Then delete from Auth
+        // Delete from Auth first
         await adminAuth.deleteUser(uid);
+        // Then delete from Firestore
+        await adminDb.collection('users').doc(uid).delete();
         return { success: true, uid };
     } catch (error: any) {
         console.error(`Failed to delete user ${uid}:`, error);
@@ -112,6 +109,5 @@ export async function sendPasswordReset(email: string) {
   const link = await adminAuth.generatePasswordResetLink(email);
   console.log('Password reset link for admin action:', link);
   // In a real app, you would use an email service to send this link.
-  // We'll log it for now as a placeholder for that integration.
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
 }

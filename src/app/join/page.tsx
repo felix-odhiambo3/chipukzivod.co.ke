@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -56,24 +56,23 @@ export default function JoinPage() {
       await updateProfile(user, {
         displayName: values.displayName,
       });
-
-      // 3. Determine role
-      const role = values.email.toLowerCase() === 'admin@chipukizivod.co.ke' && values.password === 'AdminPassword123' 
-        ? 'admin' 
-        : 'member';
-
-      // 4. Create user document in Firestore
+      
+      // 3. Create user document in Firestore with default 'member' role
+      // This Firestore role is for display/client-side convenience.
+      // The authoritative role is in the custom claim, set by an admin.
       const userDocRef = doc(firestore, 'users', user.uid);
       await setDoc(userDocRef, {
         displayName: values.displayName,
         email: values.email,
-        role: role,
+        role: 'member', // Default role for all new sign-ups
         photoURL: '', // Default empty photoURL
+        createdAt: serverTimestamp(),
       });
       
-      // Note: Setting custom claims for roles requires a backend function (like a Cloud Function).
-      // The 'role' field in Firestore will be used for client-side logic.
-      // For this implementation, we assume a Cloud Function will later sync this role to a custom claim.
+      // NOTE: A backend function (e.g., Cloud Function) should listen for this
+      // user creation and set the initial custom claim for 'member'.
+      // For now, the client-side logic will rely on the Firestore field until
+      // a proper backend is set up to issue claims.
 
       toast({
         title: 'Account Created!',
