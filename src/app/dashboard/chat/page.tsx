@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -14,8 +13,9 @@ export default function ChatPage() {
     const router = useRouter();
     const [hasAgreed, setHasAgreed] = useState(false);
 
-    // Replace this with your actual Minnit chat URL
-    const minnitChatUrl = "https://minnit.chat/YourChatName";
+    // IMPORTANT: Replace "YourChatName" with your actual Minnit chat room name.
+    // You can find this in your Minnit chat settings.
+    const minnitChatEmbedUrl = "https://minnit.chat/embed/YourChatName";
 
     if (isUserLoading) {
         return <div>Loading...</div>;
@@ -58,7 +58,7 @@ export default function ChatPage() {
                     ) : (
                         <div className="aspect-video w-full rounded-lg overflow-hidden border">
                             <iframe 
-                                src={minnitChatUrl} 
+                                src={minnitChatEmbedUrl} 
                                 className="w-full h-full"
                                 allow="fullscreen"
                                 title="Live Chat Room"
