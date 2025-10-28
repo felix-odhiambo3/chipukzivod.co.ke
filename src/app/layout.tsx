@@ -7,6 +7,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 export const metadata: Metadata = {
   title: 'Chipukizi Hub',
   description: 'Website and member portal for Chipukizi VOD Worker Cooperative.',
+  icons: {
+    icon: '/images/IMG-20250616-WA0030.svg',
+  },
 };
 
 export default function RootLayout({
