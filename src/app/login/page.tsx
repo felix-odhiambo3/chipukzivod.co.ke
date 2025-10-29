@@ -39,16 +39,24 @@ export default function LoginPage() {
     },
   });
   
-  // This function will handle user promotion and redirection
   const handleLoginSuccess = useCallback(async (loggedInUser: User) => {
+    // Ensure we have the actual auth instance and the user object with its methods
+    if (!auth || !auth.currentUser) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "Could not verify user session.",
+        });
+        return;
+    }
+    
     // ONE-TIME-ONLY: Check if this is the designated admin email
     if (loggedInUser.email === 'admin@chipukizivod.co.ke') {
       try {
-        // Securely set the custom claim on the server
         await updateUser(loggedInUser.uid, { role: 'admin' });
         
         // Force refresh the token to get the new custom claim immediately
-        const idTokenResult = await getIdTokenResult(loggedInUser, true); 
+        const idTokenResult = await getIdTokenResult(auth.currentUser, true); 
         
         if (idTokenResult.claims.role === 'admin') {
           toast({
@@ -69,13 +77,13 @@ export default function LoginPage() {
     }
 
     // For all other users, or if admin promotion fails, check role and redirect
-    const idTokenResult = await getIdTokenResult(loggedInUser);
+    const idTokenResult = await getIdTokenResult(auth.currentUser);
     if (idTokenResult.claims.role === 'admin') {
       router.replace('/admin');
     } else {
       router.replace('/dashboard');
     }
-  }, [router, toast]);
+  }, [router, toast, auth]);
 
 
   useEffect(() => {
