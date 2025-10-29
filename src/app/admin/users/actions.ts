@@ -9,20 +9,25 @@ import * as z from 'zod';
 // Securely initialize Firebase Admin SDK using environment variables
 // This should only happen once per server instance.
 let adminApp: App;
-if (!getApps().length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-    throw new Error('Firebase Admin SDK environment variables are not set.');
-  }
 
-  const firebaseAdminConfig = {
-      credential: cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: privateKey,
-      }),
-  };
-  adminApp = initializeApp(firebaseAdminConfig);
+if (!getApps().length) {
+  // Ensure the private key is correctly formatted by replacing '\\n' with '\n'
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
+    const firebaseAdminConfig = {
+        credential: cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: privateKey,
+        }),
+    };
+    adminApp = initializeApp(firebaseAdminConfig);
+  } else {
+    // Fallback for environments where default credentials are available (like deployed Google Cloud environments)
+    // Or if the env variables are not set, it will throw a meaningful error on its own.
+    adminApp = initializeApp();
+  }
 } else {
   adminApp = getApps()[0];
 }
