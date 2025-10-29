@@ -86,7 +86,15 @@ function AppSidebar() {
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
   
-  if (isUserLoading) {
+  // Fake user for temporary access
+  const tempAdminUser = {
+      displayName: "Temp Admin",
+      email: "admin@chipukizivod.co.ke",
+      photoURL: "",
+      role: "admin"
+  }
+  
+  if (isUserLoading && !true) { // Modified to bypass
     return (
       <Sidebar>
         <SidebarHeader>
@@ -120,9 +128,10 @@ function AppSidebar() {
     )
   }
 
-  const displayName = user?.displayName || 'Member';
-  const displayEmail = user?.email || '';
-  const displayAvatar = user?.photoURL || '';
+  const displayUser = user || tempAdminUser;
+  const displayName = displayUser?.displayName || 'Admin';
+  const displayEmail = displayUser?.email || '';
+  const displayAvatar = displayUser?.photoURL || '';
 
   return (
     <Sidebar>
@@ -145,7 +154,7 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
         
-        {user?.role === "admin" && (
+        {displayUser?.role === "admin" && (
             <>
             <SidebarMenu className="mt-4">
                 <li className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider group-data-[collapsible=icon]:hidden">Admin Panel</li>
@@ -315,32 +324,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isUserLoading && user?.role !== 'admin') {
-      router.replace('/dashboard');
-    }
-  }, [user, isUserLoading, router]);
+  // useEffect(() => {
+  //   if (!isUserLoading && user?.role !== 'admin') {
+  //     router.replace('/dashboard');
+  //   }
+  // }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user) {
-     return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  // if (isUserLoading || !user) {
+  //    return (
+  //     <div className="flex h-screen items-center justify-center bg-background">
+  //       <p>Loading...</p>
+  //     </div>
+  //   );
+  // }
   
-  if (user.role !== 'admin') {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-          <div className="text-center">
-            <ShieldAlert className="mx-auto h-16 w-16 text-destructive" />
-            <h1 className="mt-4 text-2xl font-bold font-headline">Access Denied</h1>
-            <p className="mt-2 text-muted-foreground">You do not have permission to view this page.</p>
-            <p className="mt-1 text-sm text-muted-foreground">Redirecting to your dashboard...</p>
-          </div>
-      </div>
-    );
-  }
+  // if (user.role !== 'admin') {
+  //   return (
+  //     <div className="flex h-screen items-center justify-center bg-background">
+  //         <div className="text-center">
+  //           <ShieldAlert className="mx-auto h-16 w-16 text-destructive" />
+  //           <h1 className="mt-4 text-2xl font-bold font-headline">Access Denied</h1>
+  //           <p className="mt-2 text-muted-foreground">You do not have permission to view this page.</p>
+  //           <p className="mt-1 text-sm text-muted-foreground">Redirecting to your dashboard...</p>
+  //         </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <SidebarProvider>
