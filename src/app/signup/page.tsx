@@ -70,15 +70,12 @@ export default function SignupPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Determine role based on email.
-      const role = values.email === 'admin@chipukizivod.co.ke' ? 'admin' : 'member';
-
-      // Use the secure server action to create the user
+      // Use the secure server action to create the user.
+      // The server will determine the role based on the email.
       await createUser({
         displayName: values.displayName,
         email: values.email,
         password: values.password,
-        role: role, 
       });
 
       toast({
@@ -96,10 +93,8 @@ export default function SignupPage() {
 
     } catch (error: any) {
       console.error('Error signing up:', error);
-      let description = "Could not create your account. Please try again later.";
-      if (error.code === 'auth/email-already-exists') {
-          description = 'An account with this email address already exists.'
-      }
+      let description = error.message || "Could not create your account. Please try again later.";
+      
       toast({
         variant: 'destructive',
         title: 'Sign-up Failed',

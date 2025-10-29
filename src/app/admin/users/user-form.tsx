@@ -1,3 +1,4 @@
+
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -119,7 +120,8 @@ export function UserForm({ existingUser, onFormSubmit }: UserFormProps) {
                   type="email"
                   placeholder="user@example.com"
                   {...field}
-                  disabled={!!existingUser}
+                  // Allow changing email only for new users
+                  disabled={!!existingUser && field.value !== 'admin@chipukizivod.co.ke'}
                 />
               </FormControl>
               <FormMessage />
@@ -144,7 +146,6 @@ export function UserForm({ existingUser, onFormSubmit }: UserFormProps) {
                 <FormMessage />
               </FormItem>
             )}
-        />
         )}
         <FormField
           control={form.control}

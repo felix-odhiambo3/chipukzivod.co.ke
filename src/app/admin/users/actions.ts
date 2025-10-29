@@ -26,7 +26,7 @@ if (!getApps().length) {
   } else {
     // Fallback for environments where default credentials are available (like deployed Google Cloud environments)
     // Or if the env variables are not set, it will throw a meaningful error on its own.
-    console.error("Firebase Admin environment variables are not set. `initializeApp()` will use default credentials.");
+    console.warn("Firebase Admin environment variables are not set. `initializeApp()` will use default credentials if available.");
     adminApp = initializeApp();
   }
 } else {
@@ -41,11 +41,19 @@ const userFormSchema = z.object({
   displayName: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6).optional(),
-  role: z.enum(['member', 'admin']),
+  // Role is no longer accepted from the client for creation
+  role: z.enum(['member', 'admin']).optional(),
   photoURL: z.string().url().optional().or(z.literal('')),
 });
 
+// For update, role is still needed
+const userUpdateSchema = userFormSchema.extend({
+  role: z.enum(['member', 'admin']),
+});
+
 export type UserFormData = z.infer<typeof userFormSchema>;
+
+const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 
 export async function createUser(data: UserFormData) {
   const validation = userFormSchema.safeParse(data);
@@ -56,6 +64,19 @@ export async function createUser(data: UserFormData) {
   if (!data.password) {
     throw new Error('Password is required to create a new user.');
   }
+  
+  let role: 'admin' | 'member' = 'member';
+
+  // Securely determine role based on email
+  if (data.email.toLowerCase() === ADMIN_EMAIL) {
+    // Check if an admin already exists
+    const adminUsers = await adminDb.collection('users').where('role', '==', 'admin').get();
+    if (!adminUsers.empty) {
+        throw new Error('An admin account already exists. Only one admin account is permitted.');
+    }
+    role = 'admin';
+  }
+
 
   // Create user in Firebase Auth
   const userRecord = await adminAuth.createUser({
@@ -66,7 +87,7 @@ export async function createUser(data: UserFormData) {
   });
 
   // Set custom claim for role. This is the secure way to handle roles.
-  await adminAuth.setCustomUserClaims(userRecord.uid, { role: data.role });
+  await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
   const batch = adminDb.batch();
 
@@ -76,11 +97,11 @@ export async function createUser(data: UserFormData) {
     email: data.email,
     displayName: data.displayName,
     photoURL: data.photoURL,
-    role: data.role, // Storing role here is for client-side display convenience
+    role: role, // Storing role here is for client-side display convenience
   });
 
   // If the user is an admin, add them to the admin roles collection
-  if (data.role === 'admin') {
+  if (role === 'admin') {
       const adminRoleRef = adminDb.collection('roles_admin').doc(userRecord.uid);
       batch.set(adminRoleRef, { isAdmin: true });
   }
@@ -91,7 +112,7 @@ export async function createUser(data: UserFormData) {
   return { uid: userRecord.uid };
 }
 
-export async function updateUser(uid: string, data: Partial<UserFormData>) {
+export async function updateUser(uid: string, data: Partial<z.infer<typeof userUpdateSchema>>) {
   const { displayName, role, photoURL } = data;
 
   const authUpdates: any = {};
@@ -115,6 +136,12 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
   }
 
   if (role) {
+    if (role === 'admin') {
+      const userToMakeAdmin = await adminAuth.getUser(uid);
+      if (userToMakeAdmin.email?.toLowerCase() !== ADMIN_EMAIL) {
+        throw new Error('Only the designated email can be assigned the admin role.');
+      }
+    }
     // Securely update the custom claim
     await adminAuth.setCustomUserClaims(uid, { role });
     const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
@@ -132,6 +159,13 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
 
 export async function deleteUser(uid: string) {
     try {
+        const userToDelete = await adminAuth.getUser(uid);
+        const claims = userToDelete.customClaims;
+
+        if (claims && claims.role === 'admin') {
+          throw new Error('The primary admin account cannot be deleted.');
+        }
+
         const batch = adminDb.batch();
         
         // Delete from Auth first
@@ -141,7 +175,7 @@ export async function deleteUser(uid: string) {
         const userDocRef = adminDb.collection('users').doc(uid);
         batch.delete(userDocRef);
 
-        // Also delete from admin roles collection
+        // Also delete from admin roles collection if they were an admin (shouldn't happen with the check above, but good for safety)
         const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
         batch.delete(adminRoleRef);
 
