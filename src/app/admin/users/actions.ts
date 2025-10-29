@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getApps, initializeApp, App } from 'firebase-admin/app';
@@ -5,12 +6,11 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 
-// Securely initialize Firebase Admin SDK
+// Securely initialize Firebase Admin SDK - This should only happen once per module load.
 let adminApp: App;
 if (!getApps().length) {
   // When running in a Google Cloud environment (like App Hosting or Cloud Functions),
   // the SDK automatically uses Application Default Credentials.
-  // No explicit credential configuration is needed.
   adminApp = initializeApp();
 } else {
   adminApp = getApps()[0];
@@ -150,3 +150,4 @@ export async function sendPasswordReset(email: string) {
   // In a real app, you would use an email service to send this link.
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
 }
+
