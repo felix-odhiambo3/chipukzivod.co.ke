@@ -140,8 +140,8 @@ export default function AboutPage() {
             <div className="space-y-12">
                 {team.map((member, index) => (
                     <Card key={member.name} className="overflow-hidden">
-                        <div className={`grid md:grid-cols-3 items-stretch`}>
-                            <div className={`relative min-h-[320px] md:col-span-1 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
+                        <div className={`grid md:grid-cols-3 items-start`}>
+                            <div className={`relative h-96 w-full md:h-auto md:aspect-[4/5] ${index % 2 === 1 ? 'md:order-2' : ''}`}>
                                 <Image src={member.image} alt={member.name} fill objectFit="cover" />
                             </div>
                             <div className={`md:col-span-2 p-8 flex flex-col justify-center ${index % 2 === 1 ? 'md:order-1' : ''}`}>
