@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare, Mail, ShieldAlert } from "lucide-react";
+import { Bell, Cog, HelpingHand, Home, LayoutDashboard, Palette, PenSquare, Users, Megaphone, Calendar, Lightbulb, User, LogOut, ChevronDown, Briefcase, ShoppingCart, MessageSquare, Mail, ShieldAlert, Image as ImageIcon } from "lucide-react";
 import Link from 'next/link';
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ const memberNavItems = [
 
 const adminNavItems = [
     { href: "/admin/events", icon: Briefcase, label: "Manage Events", tooltip: "Manage Events" },
+    { href: "/admin/gallery", icon: ImageIcon, label: "Manage Gallery", tooltip: "Manage Gallery" },
     { href: "/admin/announcements", icon: Megaphone, label: "Manage Announcements", tooltip: "Manage Announcements" },
     { href: "/admin/notifications", icon: Bell, label: "Manage Notifications", tooltip: "Manage Notifications" },
     { href: "/admin/services", icon: ShoppingCart, label: "Manage Services", tooltip: "Manage Services" },
