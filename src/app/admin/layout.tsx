@@ -59,7 +59,7 @@ const adminNavItems = [
 
 function AppSidebar() {
   const pathname = usePathname();
-  const { user, isUserLoading } = useUser();
+  const { user: realUser, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -88,13 +88,16 @@ function AppSidebar() {
   
   // Fake user for temporary access
   const tempAdminUser = {
+      uid: 'temp-admin-user',
       displayName: "Temp Admin",
       email: "admin@chipukizivod.co.ke",
       photoURL: "",
       role: "admin"
-  }
+  } as any;
   
-  if (isUserLoading && !true) { // Modified to bypass
+  const user = realUser || tempAdminUser;
+  
+  if (isUserLoading) {
     return (
       <Sidebar>
         <SidebarHeader>
@@ -128,10 +131,9 @@ function AppSidebar() {
     )
   }
 
-  const displayUser = user || tempAdminUser;
-  const displayName = displayUser?.displayName || 'Admin';
-  const displayEmail = displayUser?.email || '';
-  const displayAvatar = displayUser?.photoURL || '';
+  const displayName = user?.displayName || 'Admin';
+  const displayEmail = user?.email || '';
+  const displayAvatar = user?.photoURL || '';
 
   return (
     <Sidebar>
@@ -162,7 +164,7 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
         
-        {displayUser?.role === "admin" && (
+        {user?.role === "admin" && (
             <>
             <SidebarMenu className="mt-4">
                 <li className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider group-data-[collapsible=icon]:hidden">Admin Panel</li>
@@ -202,16 +204,25 @@ function AppSidebar() {
 function AppHeaderContent() {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
-    const { user } = useUser();
+    const { user: realUser } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
     const [popoverOpen, setPopoverOpen] = useState(false);
+    
+    const tempAdminUser = {
+      uid: 'temp-admin-user',
+      displayName: "Temp Admin",
+      email: "admin@chipukizivod.co.ke",
+      photoURL: "",
+      role: "admin"
+    } as any;
+    const user = realUser || tempAdminUser;
 
     const notificationsQuery = useMemoFirebase(() =>
-        firestore
+        (firestore && user)
             ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
             : null
-    , [firestore]);
+    , [firestore, user]);
 
     const { data: notifications } = useCollection<Notification>(notificationsQuery);
 
