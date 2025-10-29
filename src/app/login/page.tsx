@@ -178,12 +178,6 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-4 text-center text-sm">
-            Not a member?{' '}
-            <Link href="/join" className="underline hover:text-primary">
-              Join Us
-            </Link>
-          </div>
         </CardContent>
       </Card>
     </div>

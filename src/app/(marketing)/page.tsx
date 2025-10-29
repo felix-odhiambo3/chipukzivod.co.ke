@@ -105,9 +105,6 @@ export default function HomePage() {
             </div>
             {/* CTA Buttons */}
             <div className="cta-buttons flex flex-wrap gap-4 justify-center">
-              <Link href="/join" className="cta-btn primary bg-purple-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-purple-700">
-                Join Us
-              </Link>
               <Link href="#partner" className="cta-btn secondary bg-blue-600 text-white px-6 py-2 rounded font-bold shadow hover:bg-blue-700">
                 Partner With Us
               </Link>

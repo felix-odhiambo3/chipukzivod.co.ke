@@ -39,21 +39,15 @@ export function Header() {
           {isUserLoading ? (
             <div className="flex items-center gap-2">
               <Skeleton className="h-9 w-24" />
-              <Skeleton className="h-9 w-20" />
             </div>
           ) : user ? (
             <Button asChild>
               <Link href="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : (
-            <>
-              <Button asChild variant="ghost">
+            <Button asChild>
                 <Link href="/login">Member Login</Link>
               </Button>
-              <Button asChild>
-                <Link href="/join">Join Us</Link>
-              </Button>
-            </>
           )}
           <div className="md:hidden">
             <Sheet>
