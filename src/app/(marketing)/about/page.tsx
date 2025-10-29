@@ -74,7 +74,7 @@ export default function AboutPage() {
               <p>We regularly collaborate with numerous well-known brands, local businesses, NGOs, educational institutions, government agencies, and international organizations. These partners count on Chipukizi VOD Cooperative Society for their digital marketing and entertainment needs, and you can too!</p>
             </div>
             <div className="relative h-80 md:h-full rounded-lg overflow-hidden shadow-lg">
-              <Image src="https://picsum.photos/seed/chairperson/600/800" alt="Chipukizi VOD Team" layout="fill" objectFit="cover" data-ai-hint="team photo" />
+              <Image src="https://picsum.photos/seed/chairperson/600/800" alt="Chipukizi VOD Team" fill objectFit="cover" data-ai-hint="team photo" />
             </div>
           </div>
         </section>
@@ -138,20 +138,16 @@ export default function AboutPage() {
         <section className="mb-16">
             <h2 className="text-3xl font-bold font-headline text-center mb-8">Leadership Team</h2>
             <div className="space-y-12">
-                {team.map(member => (
+                {team.map((member, index) => (
                     <Card key={member.name} className="overflow-hidden">
-                        <div className="grid md:grid-cols-3 items-start">
-                             <div className="relative h-64 md:h-full">
-                                <Image src={member.image} alt={member.name} layout="fill" objectFit="cover" />
+                        <div className={`grid md:grid-cols-3 items-center`}>
+                            <div className={`relative h-96 md:col-span-1 ${index % 2 === 1 ? 'md:order-2' : ''}`}>
+                                <Image src={member.image} alt={member.name} fill objectFit="cover" />
                             </div>
-                            <div className="md:col-span-2">
-                                <CardHeader>
-                                    <CardTitle className="text-2xl font-headline">{member.name}</CardTitle>
-                                    <p className="text-primary font-semibold">{member.title}</p>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-muted-foreground">{member.bio}</p>
-                                </CardContent>
+                            <div className={`md:col-span-2 p-8 ${index % 2 === 1 ? 'md:order-1' : ''}`}>
+                                <h3 className="text-2xl font-bold font-headline">{member.name}</h3>
+                                <p className="text-primary font-semibold text-lg mb-4">{member.title}</p>
+                                <p className="text-muted-foreground">{member.bio}</p>
                             </div>
                         </div>
                     </Card>
