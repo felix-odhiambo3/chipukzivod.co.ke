@@ -50,14 +50,25 @@ export async function createUser(data: UserFormData) {
   // Set custom claim for role. This is the secure way to handle roles.
   await adminAuth.setCustomUserClaims(userRecord.uid, { role: data.role });
 
+  const batch = adminDb.batch();
+
   // Create user profile in Firestore
   const userDocRef = adminDb.collection('users').doc(userRecord.uid);
-  await userDocRef.set({
+  batch.set(userDocRef, {
     email: data.email,
     displayName: data.displayName,
     photoURL: data.photoURL,
     role: data.role, // Storing role here is for client-side display convenience
   });
+
+  // If the user is an admin, add them to the admin roles collection
+  if (data.role === 'admin') {
+      const adminRoleRef = adminDb.collection('roles_admin').doc(userRecord.uid);
+      batch.set(adminRoleRef, { isAdmin: true });
+  }
+
+  await batch.commit();
+
 
   return { uid: userRecord.uid };
 }
@@ -72,31 +83,52 @@ export async function updateUser(uid: string, data: Partial<UserFormData>) {
   if (Object.keys(authUpdates).length > 0) {
       await adminAuth.updateUser(uid, authUpdates);
   }
-
-  if (role) {
-    // Securely update the custom claim
-    await adminAuth.setCustomUserClaims(uid, { role });
-  }
-
+  
+  const batch = adminDb.batch();
+  const userDocRef = adminDb.collection('users').doc(uid);
+  
   const dbUpdates: any = {};
   if (displayName) dbUpdates.displayName = displayName;
   if (photoURL !== undefined) dbUpdates.photoURL = photoURL;
   if (role) dbUpdates.role = role; // Also update Firestore doc for consistency
-  
+
   if (Object.keys(dbUpdates).length > 0) {
-      const userDocRef = adminDb.collection('users').doc(uid);
-      await userDocRef.update(dbUpdates);
+      batch.update(userDocRef, dbUpdates);
   }
+
+  if (role) {
+    // Securely update the custom claim
+    await adminAuth.setCustomUserClaims(uid, { role });
+    const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
+    if (role === 'admin') {
+        batch.set(adminRoleRef, { isAdmin: true });
+    } else {
+        batch.delete(adminRoleRef);
+    }
+  }
+
+  await batch.commit();
 
   return { uid };
 }
 
 export async function deleteUser(uid: string) {
     try {
+        const batch = adminDb.batch();
+        
         // Delete from Auth first
         await adminAuth.deleteUser(uid);
-        // Then delete from Firestore
-        await adminDb.collection('users').doc(uid).delete();
+        
+        // Then delete from Firestore user collection
+        const userDocRef = adminDb.collection('users').doc(uid);
+        batch.delete(userDocRef);
+
+        // Also delete from admin roles collection
+        const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
+        batch.delete(adminRoleRef);
+
+        await batch.commit();
+
         return { success: true, uid };
     } catch (error: any) {
         console.error(`Failed to delete user ${uid}:`, error);

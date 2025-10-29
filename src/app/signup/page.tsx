@@ -97,7 +97,7 @@ export default function SignupPage() {
     } catch (error: any) {
       console.error('Error signing up:', error);
       let description = "Could not create your account. Please try again later.";
-      if (error.message.includes('auth/email-already-in-use') || error.message.includes('email-already-exists')) {
+      if (error.code === 'auth/email-already-exists') {
           description = 'An account with this email address already exists.'
       }
       toast({
