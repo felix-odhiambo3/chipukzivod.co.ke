@@ -6,34 +6,32 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 
-// Securely initialize Firebase Admin SDK using environment variables
-// This should only happen once per server instance.
-let adminApp: App;
+// This utility function ensures the Firebase Admin app is initialized only once.
+function initializeAdminApp(): App {
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    return existingApps[0];
+  }
 
-if (!getApps().length) {
-  // Ensure the private key is correctly formatted by replacing '\\n' with '\n'
+  // Ensure the private key is correctly formatted by replacing literal `\n` with newlines.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
-  if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
-    const firebaseAdminConfig = {
-        credential: cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: privateKey,
-        }),
-    };
-    adminApp = initializeApp(firebaseAdminConfig);
-  } else {
-    // Fallback for environments where default credentials are available (like deployed Google Cloud environments)
-    // Or if the env variables are not set, it will throw a meaningful error on its own.
-    console.warn("Firebase Admin environment variables are not set. `initializeApp()` will use default credentials if available.");
-    adminApp = initializeApp();
+  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+    throw new Error('Firebase Admin environment variables are not set. Please check your .env file.');
   }
-} else {
-  adminApp = getApps()[0];
+
+  const firebaseAdminConfig = {
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: privateKey,
+    }),
+  };
+
+  return initializeApp(firebaseAdminConfig, 'admin');
 }
 
-
+const adminApp = initializeAdminApp();
 const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
 
@@ -41,7 +39,6 @@ const userFormSchema = z.object({
   displayName: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6).optional(),
-  // Role is no longer accepted from the client for creation
   role: z.enum(['member', 'admin']).optional(),
   photoURL: z.string().url().optional().or(z.literal('')),
 });
@@ -77,7 +74,6 @@ export async function createUser(data: UserFormData) {
     role = 'admin';
   }
 
-
   // Create user in Firebase Auth
   const userRecord = await adminAuth.createUser({
     email: data.email,
@@ -107,7 +103,6 @@ export async function createUser(data: UserFormData) {
   }
 
   await batch.commit();
-
 
   return { uid: userRecord.uid };
 }
@@ -190,15 +185,11 @@ export async function deleteUser(uid: string) {
 
 export async function sendPasswordReset(email: string) {
   const actionCodeSettings = {
-    // URL you want to redirect back to. The domain (www.example.com) for this
-    // URL must be whitelisted in the Firebase Console.
     url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/login`,
-    // This must be true.
     handleCodeInApp: true,
   };
 
   const link = await adminAuth.generatePasswordResetLink(email, actionCodeSettings);
   console.log('Password reset link for admin action:', link);
-  // In a real app, you would use an email service to send this link.
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
 }
