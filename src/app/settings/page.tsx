@@ -28,6 +28,7 @@ import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { deleteUser } from '@/app/admin/users/actions';
 import { ThemeSettings } from './theme-settings';
+import { ProfileImageUpload } from './profile-image-upload';
 
 function DeleteAccountSection() {
   const { user } = useUser();
@@ -128,6 +129,15 @@ export default function SettingsPage() {
           Manage your account and site settings.
         </p>
       </div>
+      <Card>
+        <CardHeader>
+            <CardTitle>Profile Picture</CardTitle>
+            <CardDescription>Upload a new profile picture.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <ProfileImageUpload user={user} />
+        </CardContent>
+      </Card>
       <ProfileForm user={user} />
       <ThemeSettings />
       <DeleteAccountSection />

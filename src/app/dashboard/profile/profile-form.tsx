@@ -29,7 +29,6 @@ import { doc, updateDoc } from 'firebase/firestore';
 const profileFormSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
   email: z.string().email(),
-  photoURL: z.string().url('Please enter a valid URL.').optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -48,7 +47,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     defaultValues: {
       displayName: user.displayName || '',
       email: user.email || '',
-      photoURL: user.photoURL || '',
     },
   });
 
@@ -62,14 +60,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
         // Update Firebase Auth profile
         await updateProfile(auth.currentUser, {
             displayName: data.displayName,
-            photoURL: data.photoURL,
         });
 
         // Update Firestore user document
         const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
         await updateDoc(userDocRef, {
             displayName: data.displayName,
-            photoURL: data.photoURL,
         });
 
         toast({
@@ -77,9 +73,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
             description: 'Your profile has been successfully updated.',
         });
         
-        // You might want to refresh the page or re-fetch user data here
-        // to reflect the changes in the UI immediately.
-        // For simplicity, we can reload. In a more complex app, you'd update state.
         window.location.reload();
 
     } catch (error) {
@@ -96,7 +89,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     <Card>
       <CardHeader>
         <CardTitle>Personal Information</CardTitle>
-        <CardDescription>Update your display name and profile picture.</CardDescription>
+        <CardDescription>Update your display name.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -122,19 +115,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   <FormLabel>Email Address</FormLabel>
                   <FormControl>
                     <Input disabled {...field} />
-                  </FormControl>
-                   <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="photoURL"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Profile Picture URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://example.com/your-photo.jpg" {...field} />
                   </FormControl>
                    <FormMessage />
                 </FormItem>
