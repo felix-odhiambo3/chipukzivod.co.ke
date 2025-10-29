@@ -57,9 +57,8 @@ const adminNavItems = [
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
 ];
 
-function AppSidebar({ tempUser }: { tempUser: UserProfile | null }) {
+function AppSidebar({ user }: { user: UserProfile | null }) {
   const pathname = usePathname();
-  const { user: realUser, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
@@ -86,9 +85,7 @@ function AppSidebar({ tempUser }: { tempUser: UserProfile | null }) {
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
   
-  const user = realUser || tempUser;
-  
-  if (isUserLoading && !tempUser) {
+  if (!user) {
     return (
       <Sidebar>
         <SidebarHeader>
@@ -192,21 +189,18 @@ function AppSidebar({ tempUser }: { tempUser: UserProfile | null }) {
   );
 }
 
-function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
+function AppHeaderContent({ user }: { user: UserProfile | null }) {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
-    const { user: realUser, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
     const [popoverOpen, setPopoverOpen] = useState(false);
     
-    const user = realUser || tempUser;
-
     const notificationsQuery = useMemoFirebase(() =>
-        (!isUserLoading && firestore && user)
+        (firestore && user)
             ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
             : null
-    , [firestore, user, isUserLoading]);
+    , [firestore, user]);
 
     const { data: notifications } = useCollection<Notification>(notificationsQuery);
 
@@ -324,45 +318,38 @@ function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user: realUser, isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
-  // This is a temporary admin user for development access.
-  const tempAdminUser: UserProfile = {
-      id: 'temp-admin-user',
-      displayName: "Temp Admin",
-      email: "admin@chipukizivod.co.ke",
-      photoURL: "",
-      role: "admin"
-  };
-
-  const user = realUser || tempAdminUser;
-
-  // Since we are now faking a user, we don't need to check for realUser presence for redirection.
-  // The login flow can be re-enabled by removing tempAdminUser and uncommenting the useEffect below.
-  
-  /*
   useEffect(() => {
-    if (!isUserLoading && !realUser) {
-      router.replace('/login');
+    if (!isUserLoading) {
+      if (!user) {
+        // If not logged in, redirect to login page.
+        router.replace('/login');
+      } else if (user.role !== 'admin') {
+        // If logged in but not an admin, redirect to member dashboard.
+        router.replace('/dashboard');
+      }
     }
-  }, [realUser, isUserLoading, router]);
-  */
+  }, [user, isUserLoading, router]);
 
-  if (isUserLoading && !tempAdminUser) {
+  // While loading or if user is not an authorized admin, show a loading state.
+  // This prevents a flash of the admin content before redirection.
+  if (isUserLoading || !user || user.role !== 'admin') {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Loading...</p>
+        <p>Loading and verifying access...</p>
       </div>
     );
   }
 
+  // If user is an admin, render the admin layout.
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <AppSidebar tempUser={user} />
+        <AppSidebar user={user} />
         <SidebarInset className="bg-background">
-          <AppHeaderContent tempUser={user} />
+          <AppHeaderContent user={user} />
           <div className="p-4 sm:p-6 lg:p-8">
             {children}
           </div>
