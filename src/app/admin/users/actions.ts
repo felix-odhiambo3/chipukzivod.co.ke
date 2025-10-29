@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getApps, initializeApp, App } from 'firebase-admin/app';
@@ -9,8 +8,8 @@ import * as z from 'zod';
 // Securely initialize Firebase Admin SDK
 let adminApp: App;
 if (!getApps().length) {
-  // In a deployed environment (like Firebase App Hosting), the SDK
-  // will automatically use Google Application Default Credentials.
+  // When running in a Google Cloud environment (like App Hosting or Cloud Functions),
+  // the SDK automatically uses Application Default Credentials.
   // No explicit credential configuration is needed.
   adminApp = initializeApp();
 } else {
@@ -109,7 +108,7 @@ export async function sendPasswordReset(email: string) {
   const actionCodeSettings = {
     // URL you want to redirect back to. The domain (www.example.com) for this
     // URL must be whitelisted in the Firebase Console.
-    url: `${process.env.NEXT_PUBLIC_BASE_URL}/login`,
+    url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/login`,
     // This must be true.
     handleCodeInApp: true,
   };
