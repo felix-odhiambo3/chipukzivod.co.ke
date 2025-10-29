@@ -26,6 +26,7 @@ if (!getApps().length) {
   } else {
     // Fallback for environments where default credentials are available (like deployed Google Cloud environments)
     // Or if the env variables are not set, it will throw a meaningful error on its own.
+    console.error("Firebase Admin environment variables are not set. `initializeApp()` will use default credentials.");
     adminApp = initializeApp();
   }
 } else {
