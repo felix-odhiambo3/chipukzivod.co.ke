@@ -195,7 +195,7 @@ function AppSidebar({ tempUser }: { tempUser: UserProfile | null }) {
 function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
-    const { user: realUser } = useUser();
+    const { user: realUser, isUserLoading } = useUser();
     const firestore = useFirestore();
     const router = useRouter();
     const [popoverOpen, setPopoverOpen] = useState(false);
@@ -203,10 +203,10 @@ function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
     const user = realUser || tempUser;
 
     const notificationsQuery = useMemoFirebase(() =>
-        (firestore && user) // <-- Important: Only query if user exists
+        (!isUserLoading && firestore && user)
             ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
             : null
-    , [firestore, user]);
+    , [firestore, user, isUserLoading]);
 
     const { data: notifications } = useCollection<Notification>(notificationsQuery);
 
