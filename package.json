@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:seed": "node scripts/seedAdmin.js"
+    "db:seed": "node scripts/seedAdmin.js",
+    "db:clear-users": "node scripts/clearUsers.js"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
