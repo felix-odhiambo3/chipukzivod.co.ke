@@ -203,7 +203,7 @@ function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
     const user = realUser || tempUser;
 
     const notificationsQuery = useMemoFirebase(() =>
-        (firestore && user)
+        (firestore && user) // <-- Important: Only query if user exists
             ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
             : null
     , [firestore, user]);
@@ -324,7 +324,10 @@ function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Fake user for temporary access
+  const { user: realUser, isUserLoading } = useUser();
+  const router = useRouter();
+
+  // This is a temporary admin user for development access.
   const tempAdminUser: UserProfile = {
       id: 'temp-admin-user',
       displayName: "Temp Admin",
@@ -333,12 +336,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       role: "admin"
   };
 
+  const user = realUser || tempAdminUser;
+
+  // Since we are now faking a user, we don't need to check for realUser presence for redirection.
+  // The login flow can be re-enabled by removing tempAdminUser and uncommenting the useEffect below.
+  
+  /*
+  useEffect(() => {
+    if (!isUserLoading && !realUser) {
+      router.replace('/login');
+    }
+  }, [realUser, isUserLoading, router]);
+  */
+
+  if (isUserLoading && !tempAdminUser) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <AppSidebar tempUser={tempAdminUser} />
+        <AppSidebar tempUser={user} />
         <SidebarInset className="bg-background">
-          <AppHeaderContent tempUser={tempAdminUser} />
+          <AppHeaderContent tempUser={user} />
           <div className="p-4 sm:p-6 lg:p-8">
             {children}
           </div>

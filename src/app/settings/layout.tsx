@@ -214,10 +214,10 @@ function AppHeaderContent() {
     const [popoverOpen, setPopoverOpen] = useState(false);
 
     const notificationsQuery = useMemoFirebase(() =>
-        firestore
+        (firestore && user) // <-- Important: Only query if user exists
             ? query(collection(firestore, 'notifications'), orderBy('createdAt', 'desc'))
             : null
-    , [firestore]);
+    , [firestore, user]);
 
     const { data: notifications } = useCollection<Notification>(notificationsQuery);
 
