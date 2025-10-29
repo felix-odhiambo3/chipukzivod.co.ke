@@ -17,8 +17,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect, useCallback } from 'react';
 import type { AuthError, User } from 'firebase/auth';
-import { updateUser } from '../admin/users/actions';
-import { getIdTokenResult } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -39,51 +37,13 @@ export default function LoginPage() {
     },
   });
   
-  const handleLoginSuccess = useCallback(async (loggedInUser: User) => {
-    // Ensure we have the actual auth instance and the user object with its methods
-    if (!auth || !auth.currentUser) {
-        toast({
-            variant: "destructive",
-            title: "Authentication Error",
-            description: "Could not verify user session.",
-        });
-        return;
-    }
-    
-    // ONE-TIME-ONLY: Check if this is the designated admin email
-    if (loggedInUser.email === 'admin@chipukizivod.co.ke') {
-      try {
-        await updateUser(loggedInUser.uid, { role: 'admin' });
-        
-        // Force refresh the token to get the new custom claim immediately
-        const idTokenResult = await getIdTokenResult(auth.currentUser, true); 
-        
-        if (idTokenResult.claims.role === 'admin') {
-          toast({
-            title: 'Admin Promotion Success',
-            description: 'Your account has been promoted to Admin.',
-          });
-          router.replace('/admin'); // Redirect to admin dashboard
-          return;
-        }
-      } catch (error) {
-        console.error("Failed to promote admin:", error);
-        toast({
-          variant: "destructive",
-          title: 'Admin Promotion Failed',
-          description: 'Could not set admin role. Please contact support.',
-        });
-      }
-    }
-
-    // For all other users, or if admin promotion fails, check role and redirect
-    const idTokenResult = await getIdTokenResult(auth.currentUser);
-    if (idTokenResult.claims.role === 'admin') {
+  const handleLoginSuccess = useCallback((loggedInUser: User) => {
+    if (loggedInUser.role === 'admin') {
       router.replace('/admin');
     } else {
       router.replace('/dashboard');
     }
-  }, [router, toast, auth]);
+  }, [router]);
 
 
   useEffect(() => {

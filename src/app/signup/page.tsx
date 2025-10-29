@@ -60,18 +60,25 @@ export default function SignupPage() {
 
   useEffect(() => {
     if (!isUserLoading && user) {
-      router.replace('/dashboard');
+      if (user.role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/dashboard');
+      }
     }
   }, [user, isUserLoading, router]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Determine role based on email.
+      const role = values.email === 'admin@chipukizivod.co.ke' ? 'admin' : 'member';
+
       // Use the secure server action to create the user
       await createUser({
         displayName: values.displayName,
         email: values.email,
         password: values.password,
-        role: 'member', // Always default to 'member'
+        role: role, 
       });
 
       toast({
@@ -82,7 +89,7 @@ export default function SignupPage() {
       // Automatically sign in the user after successful registration
       if (auth) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        // The main layout's useEffect will handle redirection
+        // The useEffect hook will handle redirection based on role
       } else {
         router.push('/login');
       }
