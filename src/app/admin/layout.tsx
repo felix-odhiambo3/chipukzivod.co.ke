@@ -32,7 +32,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { collection, query, orderBy, doc, updateDoc, arrayUnion, writeBatch } from 'firebase/firestore';
-import type { Notification } from '@/lib/data';
+import type { Notification, UserProfile } from '@/lib/data';
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -57,7 +57,7 @@ const adminNavItems = [
     { href: "/admin/users", icon: Users, label: "Manage Users", tooltip: "Manage Users" },
 ];
 
-function AppSidebar() {
+function AppSidebar({ tempUser }: { tempUser: UserProfile | null }) {
   const pathname = usePathname();
   const { user: realUser, isUserLoading } = useUser();
   const auth = useAuth();
@@ -86,18 +86,9 @@ function AppSidebar() {
   const isActive = (href: string) => pathname.startsWith(href);
   const [memberToolsOpen, setMemberToolsOpen] = React.useState(true);
   
-  // Fake user for temporary access
-  const tempAdminUser = {
-      uid: 'temp-admin-user',
-      displayName: "Temp Admin",
-      email: "admin@chipukizivod.co.ke",
-      photoURL: "",
-      role: "admin"
-  } as any;
+  const user = realUser || tempUser;
   
-  const user = realUser || tempAdminUser;
-  
-  if (isUserLoading) {
+  if (isUserLoading && !tempUser) {
     return (
       <Sidebar>
         <SidebarHeader>
@@ -201,7 +192,7 @@ function AppSidebar() {
   );
 }
 
-function AppHeaderContent() {
+function AppHeaderContent({ tempUser }: { tempUser: UserProfile | null }) {
     const { isMobile } = useSidebar();
     const pathname = usePathname();
     const { user: realUser } = useUser();
@@ -209,14 +200,7 @@ function AppHeaderContent() {
     const router = useRouter();
     const [popoverOpen, setPopoverOpen] = useState(false);
     
-    const tempAdminUser = {
-      uid: 'temp-admin-user',
-      displayName: "Temp Admin",
-      email: "admin@chipukizivod.co.ke",
-      photoURL: "",
-      role: "admin"
-    } as any;
-    const user = realUser || tempAdminUser;
+    const user = realUser || tempUser;
 
     const notificationsQuery = useMemoFirebase(() =>
         (firestore && user)
@@ -228,14 +212,14 @@ function AppHeaderContent() {
 
     const unreadNotifications = React.useMemo(() => {
         if (!notifications || !user) return [];
-        return notifications.filter(n => !n.readBy.includes(user.uid));
+        return notifications.filter(n => !n.readBy.includes(user.id));
     }, [notifications, user]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         if (!firestore || !user) return;
         const notifRef = doc(firestore, 'notifications', notificationId);
         await updateDoc(notifRef, {
-            readBy: arrayUnion(user.uid)
+            readBy: arrayUnion(user.id)
         });
     };
 
@@ -244,7 +228,7 @@ function AppHeaderContent() {
         const batch = writeBatch(firestore);
         unreadNotifications.forEach(notif => {
             const notifRef = doc(firestore, 'notifications', notif.id);
-            batch.update(notifRef, { readBy: arrayUnion(user.uid) });
+            batch.update(notifRef, { readBy: arrayUnion(user.id) });
         });
         await batch.commit();
     };
@@ -340,42 +324,21 @@ function AppHeaderContent() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  // useEffect(() => {
-  //   if (!isUserLoading && user?.role !== 'admin') {
-  //     router.replace('/dashboard');
-  //   }
-  // }, [user, isUserLoading, router]);
-
-  // if (isUserLoading || !user) {
-  //    return (
-  //     <div className="flex h-screen items-center justify-center bg-background">
-  //       <p>Loading...</p>
-  //     </div>
-  //   );
-  // }
-  
-  // if (user.role !== 'admin') {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center bg-background">
-  //         <div className="text-center">
-  //           <ShieldAlert className="mx-auto h-16 w-16 text-destructive" />
-  //           <h1 className="mt-4 text-2xl font-bold font-headline">Access Denied</h1>
-  //           <p className="mt-2 text-muted-foreground">You do not have permission to view this page.</p>
-  //           <p className="mt-1 text-sm text-muted-foreground">Redirecting to your dashboard...</p>
-  //         </div>
-  //     </div>
-  //   );
-  // }
+  // Fake user for temporary access
+  const tempAdminUser: UserProfile = {
+      id: 'temp-admin-user',
+      displayName: "Temp Admin",
+      email: "admin@chipukizivod.co.ke",
+      photoURL: "",
+      role: "admin"
+  };
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <AppSidebar />
+        <AppSidebar tempUser={tempAdminUser} />
         <SidebarInset className="bg-background">
-          <AppHeaderContent />
+          <AppHeaderContent tempUser={tempAdminUser} />
           <div className="p-4 sm:p-6 lg:p-8">
             {children}
           </div>
