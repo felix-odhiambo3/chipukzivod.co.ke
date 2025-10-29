@@ -152,6 +152,14 @@ function AppSidebar() {
                 </SidebarMenuButton>
               </Link>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+             <Link href="/dashboard">
+                <SidebarMenuButton isActive={pathname === '/dashboard'} tooltip="Member Dashboard">
+                  <LayoutDashboard />
+                  <span>Member Dashboard</span>
+                </SidebarMenuButton>
+              </Link>
+          </SidebarMenuItem>
         </SidebarMenu>
         
         {displayUser?.role === "admin" && (
