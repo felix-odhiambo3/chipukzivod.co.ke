@@ -142,7 +142,7 @@ export default function AboutPage() {
                     <Card key={member.name} className="overflow-hidden">
                         <div className="grid md:grid-cols-3 items-start">
                              <div className="relative h-64 md:h-full">
-                                <Image src={`https://picsum.photos/seed/${member.name.split(' ')[0]}/400/600`} alt={member.name} layout="fill" objectFit="cover" />
+                                <Image src={member.image} alt={member.name} layout="fill" objectFit="cover" />
                             </div>
                             <div className="md:col-span-2">
                                 <CardHeader>
