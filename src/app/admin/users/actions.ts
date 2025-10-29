@@ -5,6 +5,8 @@ import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
+// Import the service account key
+import serviceAccount from '@/serviceAccountKey.json';
 
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
@@ -13,24 +15,15 @@ function initializeAdminApp(): App {
     return existingApps[0];
   }
 
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY
-    ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-    : undefined;
-
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-    throw new Error('Firebase Admin environment variables are not set. Please check your .env file.');
-  }
-
+  // Use the imported service account object directly.
+  // This is the most reliable way to handle credentials locally.
   const firebaseAdminConfig = {
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: privateKey,
-    }),
+    credential: cert(serviceAccount),
   };
-
+  
   return initializeApp(firebaseAdminConfig, 'admin');
 }
+
 
 const adminApp = initializeAdminApp();
 const adminAuth = getAuth(adminApp);
