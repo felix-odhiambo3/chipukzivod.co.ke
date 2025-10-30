@@ -340,7 +340,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Loading...</p>
+        <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }

@@ -26,9 +26,9 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { createUser } from '../admin/users/actions';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, type User } from 'firebase/auth';
 
 const formSchema = z
   .object({
@@ -58,20 +58,22 @@ export default function SignupPage() {
     },
   });
 
+  const handleLoginSuccess = useCallback((loggedInUser: User) => {
+    if (loggedInUser.role === 'admin') {
+      router.replace('/admin');
+    } else {
+      router.replace('/dashboard');
+    }
+  }, [router]);
+
   useEffect(() => {
     if (!isUserLoading && user) {
-      if (user.role === 'admin') {
-        router.replace('/admin');
-      } else {
-        router.replace('/dashboard');
-      }
+      handleLoginSuccess(user);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, handleLoginSuccess]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Use the secure server action to create the user.
-      // The server will determine the role based on the email.
       await createUser({
         displayName: values.displayName,
         email: values.email,
@@ -83,7 +85,6 @@ export default function SignupPage() {
         description: "You've been successfully signed up! Logging you in...",
       });
 
-      // Automatically sign in the user after successful registration
       if (auth) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         // The useEffect hook will handle redirection based on role

@@ -324,26 +324,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!isUserLoading) {
       if (!user) {
-        // If not logged in, redirect to login page.
         router.replace('/login');
       } else if (user.role !== 'admin') {
-        // If logged in but not an admin, redirect to member dashboard.
         router.replace('/dashboard');
       }
     }
   }, [user, isUserLoading, router]);
 
-  // While loading or if user is not an authorized admin, show a loading state.
-  // This prevents a flash of the admin content before redirection.
   if (isUserLoading || !user || user.role !== 'admin') {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Loading and verifying access...</p>
+        <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Verifying access...</p>
+        </div>
       </div>
     );
   }
 
-  // If user is an admin, render the admin layout.
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
