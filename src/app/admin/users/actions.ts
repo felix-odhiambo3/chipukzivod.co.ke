@@ -28,7 +28,7 @@ function initializeAdminApp(): App {
     }),
   };
   
-  return initializeApp(firebaseAdminConfig, 'admin');
+  return initializeApp(firebaseAdminConfig, 'admin-actions');
 }
 
 
