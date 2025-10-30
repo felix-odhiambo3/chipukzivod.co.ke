@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
@@ -14,17 +13,19 @@ function initializeAdminApp(): App {
   }
 
   // Use environment variables and correctly parse the private key.
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
     throw new Error('Firebase admin environment variables are not set or are invalid.');
   }
+  
+  const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   const firebaseAdminConfig = {
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: privateKey,
+      privateKey: formattedPrivateKey,
     }),
   };
   
