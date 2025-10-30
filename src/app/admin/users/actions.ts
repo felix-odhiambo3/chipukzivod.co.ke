@@ -20,13 +20,14 @@ function initializeAdminApp(): App {
     throw new Error('Firebase admin environment variables are not set or are invalid.');
   }
   
+  // THE FIX: Replace escaped newlines with actual newlines.
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   const firebaseAdminConfig = {
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: formattedPrivateKey,
+      privateKey: formattedPrivateKey, // Use the corrected key here.
     }),
   };
   
