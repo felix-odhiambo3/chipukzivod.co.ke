@@ -32,9 +32,13 @@ function initializeAdminApp(): App {
   };
   
   try {
-    return initializeApp(firebaseAdminConfig, 'admin-actions');
+    return initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
+    // Throw a more descriptive error to help with debugging.
+    if (error.code === 'app/duplicate-app') {
+        return getApps().find(app => app.name.startsWith('admin-actions-')) || initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
+    }
     throw new Error('Failed to initialize Firebase Admin SDK. Please check your credentials and server logs.');
   }
 }
