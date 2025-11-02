@@ -9,9 +9,10 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GalleryMedia } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark } from 'lucide-react';
+import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { cn } from '@/lib/utils';
 
 const MediaCard = ({ item }: { item: GalleryMedia }) => {
   const isYoutube = item.type === 'youtube';
@@ -41,7 +42,7 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
             style={{ objectFit: 'cover' }}
             className="transition-transform duration-300 group-hover:scale-105"
           />
-          {isYoutube && (
+          {(item.type === 'video' || isYoutube) && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
               <PlayCircle className="h-16 w-16 text-white/80" />
             </div>
@@ -98,11 +99,9 @@ export default function GalleryPage() {
 
   const { data: allItems, isLoading } = useCollection<GalleryMedia>(galleryQuery);
 
-  const { mediaItems, youtubeItems } = useMemo(() => {
-    if (!allItems) return { mediaItems: [], youtubeItems: [] };
-    const mediaItems = allItems.filter(item => item.type === 'image' || item.type === 'video');
-    const youtubeItems = allItems.filter(item => item.type === 'youtube');
-    return { mediaItems, youtubeItems };
+  const mediaItems = useMemo(() => {
+    if (!allItems) return [];
+    return allItems.filter(item => item.type === 'image' || item.type === 'video');
   }, [allItems]);
 
   return (
@@ -117,7 +116,17 @@ export default function GalleryPage() {
       <Tabs defaultValue="uploads" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
           <TabsTrigger value="uploads">Media Uploads</TabsTrigger>
-          <TabsTrigger value="youtube">YouTube</TabsTrigger>
+          <Link
+            href="https://www.youtube.com/@chipukizivoiceofdrama5137"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+              "hover:bg-background/80"
+            )}
+          >
+            YouTube <ExternalLink className="ml-2 h-4 w-4" />
+          </Link>
         </TabsList>
 
         <TabsContent value="uploads" className="mt-8">
@@ -130,20 +139,6 @@ export default function GalleryPage() {
           ) : (
             <div className="text-center py-16 text-muted-foreground">
               No media has been uploaded yet.
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="youtube" className="mt-8">
-          {isLoading ? (
-            <GallerySkeleton />
-          ) : youtubeItems?.length ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {youtubeItems.map(item => <MediaCard key={item.id} item={item} />)}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-muted-foreground">
-              No YouTube videos have been added yet.
             </div>
           )}
         </TabsContent>
