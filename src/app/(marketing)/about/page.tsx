@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight, Briefcase, Handshake, Lightbulb, Users, FaFacebook, FaTwitter, FaLinkedin, FaTiktok, FaYoutube, FaInstagram, Heart, Rss } from 'lucide-react';
-import { FaBullseye, FaEye, FaVideo, FaBullhorn, FaUsers as FaUsersIcon, FaStar, FaHandshake, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+import { FaBullseye, FaEye, FaVideo, FaBullhorn, FaUsers as FaUsersIcon, FaStar, FaHandshake as FaHandshakeIcon, FaGraduationCap, FaEnvelope, FaPhone, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
 
 
 const values = [
@@ -20,7 +20,7 @@ const services = [
   { icon: FaBullhorn, title: "Digital Marketing", description: "Strategic social media campaigns and brand promotion across multiple platforms" },
   { icon: FaUsersIcon, title: "Youth Training", description: "Skills development programs for unemployed youth in media production and marketing" },
   { icon: FaStar, title: "Talent Development", description: "Identifying and nurturing creative talent in drama, content creation, and digital arts" },
-  { icon: FaHandshake, title: "Brand Partnerships", description: "Collaborative marketing solutions that benefit both brands and our creative community" },
+  { icon: FaHandshakeIcon, title: "Brand Partnerships", description: "Collaborative marketing solutions that benefit both brands and our creative community" },
   { icon: FaGraduationCap, title: "Educational Content", description: "Creating informative and inspiring content that educates and empowers communities" },
 ];
 
@@ -73,7 +73,7 @@ export default function AboutPage() {
               <p>As one of Kenya's most innovative youth-driven cooperatives, we are the local experts in video production, social media marketing, brand promotion, and talent development. We provide content creation, marketing campaigns, and training services for individuals, businesses, and organizations throughout Kenya and beyond. Our creative hub, training facilities, and well-equipped production studio are strategically located in Kenya, enabling us to provide fast, professional services to clients across the region.</p>
               <p>We regularly collaborate with numerous well-known brands, local businesses, NGOs, educational institutions, government agencies, and international organizations. These partners count on Chipukizi VOD Cooperative Society for their digital marketing and entertainment needs, and you can too!</p>
             </div>
-            <div className="relative h-80 md:h-full rounded-lg overflow-hidden shadow-lg">
+            <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden shadow-lg">
               <Image src="/images/w1eb.jpg" alt="Chipukizi VOD Team" fill objectFit="cover" objectPosition="top" data-ai-hint="team photo" />
             </div>
           </div>
@@ -201,3 +201,5 @@ export default function AboutPage() {
     </>
   );
 }
+
+    
