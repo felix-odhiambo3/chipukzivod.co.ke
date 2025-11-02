@@ -99,13 +99,24 @@ function BookNowFormComponent() {
         ? 'Other (Specified)' 
         : selectedService?.title || 'General Inquiry';
 
-    const bookingData = {
+    const bookingData: any = {
       ...values,
       serviceTitle,
-      eventDate: values.eventDate ? format(values.eventDate, 'yyyy-MM-dd') : undefined,
       status: 'pending',
       createdAt: serverTimestamp(),
     };
+    
+    if (values.eventDate) {
+      bookingData.eventDate = format(values.eventDate, 'yyyy-MM-dd');
+    } else {
+      delete bookingData.eventDate;
+    }
+
+    if (!values.eventLocation) delete bookingData.eventLocation;
+    if (!values.eventDuration) delete bookingData.eventDuration;
+    if (!values.otherServiceDescription) delete bookingData.otherServiceDescription;
+    if (!values.phone) delete bookingData.phone;
+
 
     try {
       const bookingsCollection = collection(firestore, 'bookings');
