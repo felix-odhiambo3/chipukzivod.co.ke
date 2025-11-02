@@ -36,6 +36,10 @@ export type Booking = {
     message: string;
     status: 'pending' | 'contacted';
     createdAt: string;
+    otherServiceDescription?: string;
+    eventDate?: string;
+    eventLocation?: string;
+    eventDuration?: string;
 };
 
 export type ContactInquiry = {

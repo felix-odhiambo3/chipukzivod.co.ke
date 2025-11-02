@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,30 +17,54 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useSearchParams } from 'next/navigation'
-import { useFirestore } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { useSearchParams } from 'next/navigation';
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
+import type { Service } from "@/lib/data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Please enter a valid email address."),
   phone: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters."),
-  serviceId: z.string(),
-  serviceTitle: z.string(),
+  serviceId: z.string().min(1, "Please select a service."),
+  otherServiceDescription: z.string().optional(),
+  eventDate: z.date().optional(),
+  eventLocation: z.string().optional(),
+  eventDuration: z.string().optional(),
+}).refine(data => {
+    if (data.serviceId === 'other') {
+        return !!data.otherServiceDescription && data.otherServiceDescription.length >= 10;
+    }
+    return true;
+}, {
+    message: "Description must be at least 10 characters.",
+    path: ["otherServiceDescription"],
 });
 
-export default function BookNowPage() {
-  const searchParams = useSearchParams()
-  const serviceId = searchParams.get('serviceId')
-  const serviceTitle = searchParams.get('serviceTitle')
+function BookNowFormComponent() {
+  const searchParams = useSearchParams();
+  const serviceIdParam = searchParams.get('serviceId');
+  const serviceTitleParam = searchParams.get('serviceTitle');
+
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+
+  const servicesQuery = useMemoFirebase(() =>
+    firestore ? query(collection(firestore, 'services'), orderBy('title')) : null
+  , [firestore]);
+  const { data: services, isLoading: isLoadingServices } = useCollection<Service>(servicesQuery);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,20 +73,20 @@ export default function BookNowPage() {
       email: "",
       phone: "",
       message: "",
-      serviceId: serviceId || "",
-      serviceTitle: serviceTitle || "General Inquiry",
+      serviceId: serviceIdParam || "",
+      otherServiceDescription: "",
+      eventLocation: "",
+      eventDuration: "",
     },
   });
-  
-  useEffect(() => {
-    if (serviceId) {
-      form.setValue('serviceId', serviceId);
-    }
-    if (serviceTitle) {
-      form.setValue('serviceTitle', serviceTitle);
-    }
-  }, [serviceId, serviceTitle, form]);
 
+  const selectedServiceId = form.watch("serviceId");
+
+  useEffect(() => {
+    if (serviceIdParam) {
+      form.setValue('serviceId', serviceIdParam);
+    }
+  }, [serviceIdParam, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
@@ -68,8 +94,15 @@ export default function BookNowPage() {
       return;
     }
 
+    const selectedService = services?.find(s => s.id === values.serviceId);
+    const serviceTitle = values.serviceId === 'other' 
+        ? 'Other (Specified)' 
+        : selectedService?.title || 'General Inquiry';
+
     const bookingData = {
       ...values,
+      serviceTitle,
+      eventDate: values.eventDate ? format(values.eventDate, 'yyyy-MM-dd') : undefined,
       status: 'pending',
       createdAt: serverTimestamp(),
     };
@@ -106,17 +139,114 @@ export default function BookNowPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="serviceTitle"
+                name="serviceId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger disabled={isLoadingServices}>
+                          <SelectValue placeholder="Select a service..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {services?.map(service => (
+                          <SelectItem key={service.id} value={service.id}>{service.title}</SelectItem>
+                        ))}
+                        <SelectItem value="other">Other (Please specify)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {selectedServiceId === 'other' && (
+                <FormField
+                  control={form.control}
+                  name="otherServiceDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Description</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Please describe the service you are looking for..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
+              {selectedServiceId && selectedServiceId !== 'other' && (
+                <div className="space-y-6 p-4 border rounded-md bg-muted/50">
+                   <FormField
+                    control={form.control}
+                    name="eventDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Event Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="eventLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Location</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Nairobi, Kenya or Online" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="eventDuration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Duration (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., 3 hours, 2 days" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -163,10 +293,11 @@ export default function BookNowPage() {
                 name="message"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Your Message</FormLabel>
+                    <FormLabel>Additional Details</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Tell us more about your needs..." {...field} rows={5} />
                     </FormControl>
+                     <FormDescription>Provide any extra information that might be helpful.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -180,4 +311,12 @@ export default function BookNowPage() {
       </Card>
     </div>
   );
+}
+
+export default function BookNowPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <BookNowFormComponent />
+        </Suspense>
+    )
 }

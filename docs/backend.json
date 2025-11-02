@@ -184,6 +184,23 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "otherServiceDescription": {
+            "type": "string",
+            "description": "Description of the service if 'Other' is selected."
+        },
+        "eventDate": {
+            "type": "string",
+            "format": "date",
+            "description": "The proposed date for the event."
+        },
+        "eventLocation": {
+            "type": "string",
+            "description": "The proposed location for the event."
+        },
+        "eventDuration": {
+            "type": "string",
+            "description": "The proposed duration for the event."
         }
       },
       "required": ["name", "email", "serviceId", "serviceTitle", "message", "status"]
