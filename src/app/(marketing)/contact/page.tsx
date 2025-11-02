@@ -1,3 +1,4 @@
+
 'use client';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -118,7 +119,7 @@ export default function ContactPage() {
 
   return (
     <div>
-      <section className="relative h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('https://picsum.photos/seed/contactHero/1920/1080')" }}>
+      <section className="relative h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/images/w2eb.jpg')" }}>
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
           <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">Contact Kenya's Creative Experts Today</h1>
