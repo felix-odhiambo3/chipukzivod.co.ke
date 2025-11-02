@@ -55,7 +55,7 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative h-[400px] bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/images/web.2.jpg')" }}>
+      <section className="relative h-[400px] bg-cover bg-top bg-no-repeat" style={{ backgroundImage: "url('/images/web.2.jpg')" }}>
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
           <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">About Chipukizi VOD</h1>
@@ -186,7 +186,7 @@ export default function AboutPage() {
                 </div>
                 <div className="w-full h-80 md:h-full rounded-lg overflow-hidden shadow-lg">
                     <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3988.6833763739523!2d36.725379174965795!3d-1.366653998620414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjEnNjAuMCJTIDM2wrA0Myc0MC42IkU!5e0!3m2!1sen!2ske!4v1753279855967!5m2!1sen!2ske"
+                    src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3988.6833763739523!2d36.725379174965795!3d-1.366653998620414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjEnNjAuMCJTIDM2wrA0Myc0MC42IkU!5e0!3m2!1sen!2ske!4v1753279855966!5m2!1sen!2ske"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -201,3 +201,5 @@ export default function AboutPage() {
     </>
   );
 }
+
+    
