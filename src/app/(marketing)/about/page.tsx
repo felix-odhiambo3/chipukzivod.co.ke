@@ -56,7 +56,7 @@ export default function AboutPage() {
     <>
       {/* Hero Section */}
       <section className="relative h-[400px] bg-cover bg-top bg-no-repeat" style={{ backgroundImage: "url('/images/web.2.jpg')" }}>
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/60" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
           <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">About Chipukizi VOD</h1>
           <p className="mt-4 text-lg md:text-xl text-white/90">Empowering Youth Through Creative Excellence</p>
@@ -201,5 +201,3 @@ export default function AboutPage() {
     </>
   );
 }
-
-    
