@@ -74,7 +74,7 @@ export default function AboutPage() {
               <p>We regularly collaborate with numerous well-known brands, local businesses, NGOs, educational institutions, government agencies, and international organizations. These partners count on Chipukizi VOD Cooperative Society for their digital marketing and entertainment needs, and you can too!</p>
             </div>
             <div className="relative h-80 md:h-full rounded-lg overflow-hidden shadow-lg">
-              <Image src="https://picsum.photos/seed/chairperson/600/800" alt="Chipukizi VOD Team" fill objectFit="cover" data-ai-hint="team photo" />
+              <Image src="/images/w1eb.jpg" alt="Chipukizi VOD Team" fill objectFit="cover" data-ai-hint="team photo" />
             </div>
           </div>
         </section>
