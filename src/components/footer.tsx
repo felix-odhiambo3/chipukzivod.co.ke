@@ -38,7 +38,7 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Connect With Us</h4>
             <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-primary"><TwitterIcon /></a>
+              <a href="https://x.com/drama_voice?t=WSBdb8YGtaBdasNwWZdnSg&s=08" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><TwitterIcon /></a>
               <a href="https://www.youtube.com/watch?v=6UN8Tg-71Hg" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary"><Youtube /></a>
               <a href="#" className="text-muted-foreground hover:text-primary"><Instagram /></a>
               <a href="#" className="text-muted-foreground hover:text-primary"><Linkedin /></a>
