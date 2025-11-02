@@ -178,7 +178,7 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow get: if isAdmin();
       allow list: if isAdmin();
-      allow create: if isSignedIn(); // Only signed in users can create bookings
+      allow create: if true; // Allow anyone to create a booking
       allow update: if isAdmin() && resource != null;
       allow delete: if false;
     }
@@ -349,3 +349,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
