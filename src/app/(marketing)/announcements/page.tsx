@@ -1,3 +1,4 @@
+
 'use client';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -63,7 +64,7 @@ export default function AnnouncementsPage() {
             <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">Announcements</h1>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                    The latest news, updates, and notices from Chipukizi Hub.
+                    The latest news, updates, and notices from Chipukizi VOD Cooperative Society.
                 </p>
             </div>
 

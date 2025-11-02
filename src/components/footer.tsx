@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Logo } from './logo';
 import { Youtube, Instagram, Linkedin } from 'lucide-react';
@@ -45,7 +46,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Chipukizi Hub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Chipukizi VOD Cooperative Society. All rights reserved.</p>
         </div>
       </div>
     </footer>

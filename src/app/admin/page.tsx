@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
       <div>
         <h1 className="text-3xl font-bold font-headline">Admin Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome to the Chipukizi Hub administration panel.
+          Welcome to the Chipukizi VOD Cooperative Society administration panel.
         </p>
       </div>
 

@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Event",
       "type": "object",
-      "description": "Represents an event in the Chipukizi Hub system.",
+      "description": "Represents an event in the Chipukizi VOD Cooperative Society system.",
       "properties": {
         "title": {
           "type": "string",
@@ -81,7 +81,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user in the Chipukizi Hub system.",
+      "description": "Represents a user in the Chipukizi VOD Cooperative Society system.",
       "properties": {
         "email": {
           "type": "string",

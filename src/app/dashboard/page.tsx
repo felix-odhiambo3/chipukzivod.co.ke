@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div>
                 <h1 className="text-3xl font-bold font-headline">Welcome back, {userName}!</h1>
-                <p className="text-muted-foreground">Here's your personal hub for all things Chipukizi.</p>
+                <p className="text-muted-foreground">Here's your personal hub for all things Chipukizi VOD Cooperative Society.</p>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

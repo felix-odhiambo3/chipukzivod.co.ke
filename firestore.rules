@@ -1,5 +1,6 @@
+
 /**
- * @fileOverview Firestore Security Rules for Chipukizi Hub.
+ * @fileOverview Firestore Security Rules for Chipukizi VOD Cooperative Society.
  *
  * Core Philosophy:
  * This ruleset implements a hybrid security model, balancing public accessibility with administrative control and user-specific data isolation.
@@ -349,5 +350,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

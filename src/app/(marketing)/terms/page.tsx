@@ -10,7 +10,7 @@ export default function TermsPage() {
           <p className="text-muted-foreground pt-2">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </CardHeader>
         <CardContent className="prose prose-lg max-w-none text-muted-foreground dark:prose-invert prose-headings:font-headline prose-headings:text-foreground">
-          <p>Please read these terms of service ("Terms", "Terms of Service") carefully before using the Chipukizi Hub website (the "Service") operated by Chipukizi VOD Worker Cooperative ("us", "we", or "our").</p>
+          <p>Please read these terms of service ("Terms", "Terms of Service") carefully before using the Chipukizi VOD Cooperative Society website (the "Service") operated by Chipukizi VOD Worker Cooperative ("us", "we", or "our").</p>
           <p>Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
 
           <h2>1. Agreement to Terms</h2>

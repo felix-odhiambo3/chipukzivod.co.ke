@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -5,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Chipukizi Hub',
+  title: 'Chipukizi VOD Cooperative Society',
   description: 'Website and member portal for Chipukizi VOD Worker Cooperative.',
   icons: {
     icon: '/images/IMG-20250616-WA0030.svg',

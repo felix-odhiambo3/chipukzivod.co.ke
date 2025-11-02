@@ -123,7 +123,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <Logo className="mx-auto mb-4" />
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
-          <CardDescription>Join the Chipukizi Hub member portal.</CardDescription>
+          <CardDescription>Join the Chipukizi VOD Cooperative Society member portal.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

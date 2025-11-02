@@ -10,7 +10,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground pt-2">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </CardHeader>
         <CardContent className="prose prose-lg max-w-none text-muted-foreground dark:prose-invert prose-headings:font-headline prose-headings:text-foreground">
-          <p>Chipukizi VOD Worker Cooperative ("us", "we", or "our") operates the Chipukizi Hub website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.</p>
+          <p>Chipukizi VOD Worker Cooperative ("us", "we", or "our") operates the Chipukizi VOD Cooperative Society website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.</p>
 
           <h2>1. Information Collection and Use</h2>
           <p>We collect several different types of information for various purposes to provide and improve our Service to you. This may include, but is not limited to, your email address, name, and usage data.</p>
