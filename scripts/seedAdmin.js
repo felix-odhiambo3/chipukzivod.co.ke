@@ -3,13 +3,12 @@
 // It is idempotent, meaning it can be run multiple times without creating duplicate users.
 
 // To run this script:
-// 1. Make sure your .env file is populated with the correct Firebase Admin credentials.
+// 1. Make sure your environment variables are correctly set for your deployment environment.
 // 2. Run `npm run db:seed` from your terminal.
 
 const admin = require('firebase-admin');
 
-// Load environment variables from .env file
-require('dotenv').config({ path: '.env' });
+// Note: We no longer manually load dotenv. Next.js or the deployment environment should handle this.
 
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -26,7 +25,7 @@ function initializeAdminApp() {
 
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
   if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-    throw new Error('Firebase admin environment variables are not set. Please check your .env file.');
+    throw new Error('Firebase admin environment variables are not set. Please check your environment configuration.');
   }
 
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');

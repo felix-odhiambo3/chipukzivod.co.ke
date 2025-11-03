@@ -1,9 +1,5 @@
 'use server';
 
-import { config } from 'dotenv';
-import path from 'path';
-config({ path: path.resolve(process.cwd(), '.env') });
-
 import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -23,7 +19,7 @@ function initializeAdminApp(): App {
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      'Firebase Admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your .env file.'
+      'Firebase Admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your environment configuration.'
     );
   }
 
@@ -41,7 +37,7 @@ function initializeAdminApp(): App {
     return initializeApp(firebaseAdminConfig, appName);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
-    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY in your .env file is a single-line string with \\n for newlines.');
+    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY is correctly formatted.');
   }
 }
 
