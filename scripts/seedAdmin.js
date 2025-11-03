@@ -3,6 +3,8 @@ const admin = require('firebase-admin');
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
 
+let adminApp;
+
 // --- Initialize Firebase Admin SDK ---
 // This is the secure way to initialize on the server.
 // It uses environment variables and handles the private key formatting.
@@ -10,7 +12,7 @@ const ADMIN_PASSWORD = 'Admin123!';
 // Helper function to initialize the app
 function initializeAdminApp() {
   if (admin.apps.length > 0) {
-    return admin.app();
+    return admin.apps[0];
   }
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
@@ -36,7 +38,13 @@ function initializeAdminApp() {
   }
 }
 
-const adminApp = initializeAdminApp();
+try {
+  adminApp = initializeAdminApp();
+} catch(error) {
+    console.error(error);
+    process.exit(1);
+}
+
 const adminAuth = admin.auth(adminApp);
 const adminDb = admin.firestore(adminApp);
 

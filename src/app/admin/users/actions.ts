@@ -5,14 +5,14 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 
+let adminApp: App;
+
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
-  const appName = 'admin-actions';
-  const existingApp = getApps().find(app => app.name === appName);
-  if (existingApp) {
-    return existingApp;
+  if (getApps().length > 0) {
+    return getApps()[0];
   }
-  
+
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
@@ -25,26 +25,34 @@ function initializeAdminApp(): App {
 
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
-  const firebaseAdminConfig = {
-    credential: cert({
-      projectId,
-      clientEmail,
-      privateKey: formattedPrivateKey,
-    }),
-  };
-  
   try {
-    return initializeApp(firebaseAdminConfig, appName);
+     adminApp = initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey: formattedPrivateKey,
+      }),
+    });
+    return adminApp;
   } catch (error: any) {
     console.error('Admin SDK init error', error);
     throw new Error('Failed to parse private key. Ensure FIREBASE_PRIVATE_KEY is correctly formatted in your environment. ' + error.message);
   }
 }
 
+// Initialize the app and services immediately
+try {
+  adminApp = initializeAdminApp();
+} catch (error) {
+  console.error("Failed to initialize Firebase Admin SDK:", error);
+  // We throw an error here to make it clear during development that the server-side actions will not work.
+  // In a production scenario, you might handle this more gracefully.
+  throw new Error("Server-side Firebase services could not be initialized. Please check your environment variables.");
+}
 
-const adminApp = initializeAdminApp();
 const adminAuth = getAuth(adminApp);
 const adminDb = getFirestore(adminApp);
+
 
 const userFormSchema = z.object({
   displayName: z.string().min(2),
