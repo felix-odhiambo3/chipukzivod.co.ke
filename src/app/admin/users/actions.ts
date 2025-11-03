@@ -1,6 +1,6 @@
 
 'use server';
-
+import 'dotenv/config';
 import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -14,8 +14,6 @@ function initializeAdminApp(): App {
     return existingApp;
   }
   
-  // Next.js now automatically loads .env.local, so direct dotenv is often not needed
-  // in the same way. We check process.env directly.
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
@@ -26,7 +24,6 @@ function initializeAdminApp(): App {
     );
   }
 
-  // CRITICAL FIX: Replace escaped newlines with actual newlines.
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   const firebaseAdminConfig = {
@@ -41,7 +38,6 @@ function initializeAdminApp(): App {
     return initializeApp(firebaseAdminConfig, appName);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
-    // Throw a more descriptive error to help with debugging.
     throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY in your .env file is a single-line string with \\n for newlines.');
   }
 }
