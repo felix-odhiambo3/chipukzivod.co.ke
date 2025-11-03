@@ -178,7 +178,7 @@ export default function AboutPage() {
                         </CardHeader>
                         <CardContent>
                            <p className="text-muted-foreground">The Co-operative University of Kenya, Karen<br />About 20km from Nairobi CBD, off Lang'ata Road</p>
-                            <a href="https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d1080.2685147330374!2d36.727538!3d-1.366431!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjInMDAuMCJTIDM2wrA0Myc0MC42IkU!5e1!3m2!1sen!2ske!4v1762154578695!5m2!1sen!2ske" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline mt-2 inline-block">
+                            <a href="https://www.google.com/maps/place/Co-operative+University+of+Kenya+-+Main+Campus,+Karen/@-1.366601,36.725488,17z" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline mt-2 inline-block">
                                 View on Google Maps
                             </a>
                         </CardContent>
