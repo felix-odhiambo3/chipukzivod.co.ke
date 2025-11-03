@@ -58,7 +58,7 @@ export default function AboutPage() {
       <section className="relative h-[400px] bg-cover bg-top bg-no-repeat" style={{ backgroundImage: "url('/images/web.2.jpg')" }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative h-full flex flex-col items-center justify-center text-center text-white p-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">About Chipukizi VOD</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tight">About Chipukizi VOD Cooperative Society</h1>
           <p className="mt-4 text-lg md:text-xl text-white/90">Empowering Youth Through Creative Excellence</p>
         </div>
       </section>
@@ -178,7 +178,7 @@ export default function AboutPage() {
                         </CardHeader>
                         <CardContent>
                            <p className="text-muted-foreground">The Co-operative University of Kenya, Karen<br />About 20km from Nairobi CBD, off Lang'ata Road</p>
-                            <a href="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3988.6833763739523!2d36.725379174965795!3d-1.366653998620414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjEnNjAuMCJTIDM2wrA0Myc0MC42IkU!5e0!3m2!1sen!2ske!4v1753279855967!5m2!1sen!2ske" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline mt-2 inline-block">
+                            <a href="https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d1080.2685147330374!2d36.727538!3d-1.366431!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjInMDAuMCJTIDM2wrA0Myc0MC42IkU!5e1!3m2!1sen!2ske!4v1762154578695!5m2!1sen!2ske" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline mt-2 inline-block">
                                 View on Google Maps
                             </a>
                         </CardContent>
@@ -186,7 +186,7 @@ export default function AboutPage() {
                 </div>
                 <div className="w-full h-80 md:h-full rounded-lg overflow-hidden shadow-lg">
                     <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3988.6833763739523!2d36.725379174965795!3d-1.366653998620414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjEnNjAuMCJTIDM2wrA0Myc0MC42IkU!5e0!3m2!1sen!2ske!4v1753279855966!5m2!1sen!2ske"
+                    src="https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d1080.2685147330374!2d36.727538!3d-1.366431!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjInMDAuMCJTIDM2wrA0Myc0MC42IkU!5e1!3m2!1sen!2ske!4v1762154578695!5m2!1sen!2ske"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -201,5 +201,3 @@ export default function AboutPage() {
     </>
   );
 }
-
-    
