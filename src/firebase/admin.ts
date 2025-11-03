@@ -11,7 +11,7 @@ let adminApp: admin.app.App | null = null;
  * which is a requirement for the Firebase Admin SDK.
  */
 function initializeAdminApp() {
-  if (admin.apps.length > 0) {
+  if (admin.apps.length > 0 && admin.apps[0]) {
     // If the app is already initialized, return the existing instance.
     return admin.apps[0];
   }
