@@ -1,13 +1,4 @@
 
-require('dotenv').config();
-
-// This script is used to seed the database with a default admin user.
-// It is idempotent, meaning it can be run multiple times without creating duplicate users.
-
-// To run this script:
-// 1. Make sure your environment variables are correctly set for your deployment environment.
-// 2. Run `npm run db:seed` from your terminal.
-
 const admin = require('firebase-admin');
 
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';

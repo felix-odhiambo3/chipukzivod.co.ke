@@ -1,14 +1,4 @@
 
-require('dotenv').config();
-
-// This script is used to delete all non-admin users from Firebase Authentication and Firestore.
-// It is idempotent and safe to run multiple times.
-// WARNING: This is a destructive operation and cannot be undone.
-
-// To run this script:
-// 1. Make sure your environment variables are correctly set for your deployment environment.
-// 2. Run `npm run db:clear-users` from your terminal.
-
 const admin = require('firebase-admin');
 
 const ADMIN_EMAIL_TO_PROTECT = 'admin@chipukizivod.co.ke';
