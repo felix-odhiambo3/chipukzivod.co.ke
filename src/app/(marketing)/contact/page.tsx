@@ -277,7 +277,7 @@ export default function ContactPage() {
 
        <section className="w-full h-[400px] bg-muted">
          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.6833763739523!2d36.725379174965795!3d-1.366653998620414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f05a8626c117b%3A0x28653291357f12e5!2sThe%20Co-operative%20University%20of%20Kenya!5e0!3m2!1sen!2ske!4v1753279855967"
+            src="https://www.google.com/maps/embed?pb=!1m13!1m8!1m3!1d1080.2685147330374!2d36.727538!3d-1.366431!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwMjInMDAuMCJTIDM2wrA0Myc0MC42IkU!5e1!3m2!1sen!2ske!4v1762154578695!5m2!1sen!2ske"
             width="100%"
             height="100%"
             style={{ border: 0 }}
