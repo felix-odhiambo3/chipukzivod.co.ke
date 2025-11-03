@@ -79,7 +79,7 @@ export async function createUser(data: UserFormData) {
   
   // CRITICAL: Public signup must never create an admin.
   // The `role` from the client is ignored, always defaults to 'member'.
-  const role: 'member' = 'member';
+  const role = 'member';
 
   // Check if email is already in use
   try {
