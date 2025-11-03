@@ -8,8 +8,6 @@
 
 const admin = require('firebase-admin');
 
-// Note: We no longer manually load dotenv. Next.js or the deployment environment should handle this.
-
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
 
@@ -23,8 +21,10 @@ function initializeAdminApp() {
     return admin.app();
   }
 
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+  if (!projectId || !clientEmail || !privateKey) {
     throw new Error('Firebase admin environment variables are not set. Please check your environment configuration.');
   }
 
@@ -33,8 +33,8 @@ function initializeAdminApp() {
   try {
     return admin.initializeApp({
       credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        projectId,
+        clientEmail,
         privateKey: formattedPrivateKey,
       }),
     });

@@ -37,7 +37,7 @@ function initializeAdminApp(): App {
     return initializeApp(firebaseAdminConfig, appName);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
-    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY is correctly formatted.');
+    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY is correctly formatted in your environment.');
   }
 }
 
@@ -77,11 +77,14 @@ export async function createUser(data: UserFormData) {
 
   try {
     await adminAuth.getUserByEmail(data.email);
+    // If the above line does not throw, it means the user exists.
     throw new Error('An account with this email already exists.');
   } catch (error: any) {
+    // We expect 'auth/user-not-found'. If it's any other error, re-throw it.
     if (error.code !== 'auth/user-not-found') {
       throw error;
     }
+    // If user is not found, we can proceed.
   }
 
 
