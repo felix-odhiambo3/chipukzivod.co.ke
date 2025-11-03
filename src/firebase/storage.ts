@@ -7,8 +7,10 @@ import {
   type FirebaseStorage,
 } from 'firebase/storage';
 
+const UPLOAD_TIMEOUT_MS = 30000; // 30 seconds
+
 /**
- * Uploads a file to Firebase Storage.
+ * Uploads a file to Firebase Storage with a timeout.
  * @param storage - The Firebase Storage instance.
  * @param file - The file object to upload.
  * @param userId - Optional user ID for namespacing the storage path.
@@ -35,14 +37,26 @@ export function uploadFileToStorage(
   });
 
   return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      uploadTask.cancel();
+      reject(new Error('Upload timed out after 30 seconds. Please check your network connection and try again.'));
+    }, UPLOAD_TIMEOUT_MS);
+
     uploadTask.on(
       'state_changed',
       (snapshot) => {
         const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         onProgress(Math.round(pct));
       },
-      (error) => reject(error),
+      (error) => {
+        clearTimeout(timeoutId);
+        // Don't reject on 'canceled' error if it was due to our timeout
+        if (error.code !== 'storage/canceled') {
+            reject(error);
+        }
+      },
       async () => {
+        clearTimeout(timeoutId);
         try {
           const url = await getDownloadURL(uploadTask.snapshot.ref);
           resolve({ url, path });
