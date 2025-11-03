@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
-import { useStorage, useFirestore, useAuth } from '@/firebase';
-import { uploadFileToStorage } from '@/firebase/storage';
+import { useFirestore, useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { UploadCloud, CheckCircle2, AlertCircle, Edit, Trash2 } from 'lucide-react';
@@ -24,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import axios from 'axios';
 
 interface ProfileImageUploadProps {
   user: User;
@@ -36,7 +36,6 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
   const [error, setError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const storage = useStorage();
   const firestore = useFirestore();
   const auth = useAuth();
   const { toast } = useToast();
@@ -62,8 +61,8 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
   const handleFile = useCallback(
     async (file: File | null) => {
       if (!file) return;
-      if (!user || !storage) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User or storage not available.' });
+      if (!user || !firestore) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User not authenticated or database not available.' });
         return;
       }
 
@@ -72,18 +71,45 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       setProgress(0);
 
       try {
-        const { url } = await uploadFileToStorage(storage, file, user.uid, setProgress);
-        await handleUpdateProfilePicture(url);
+        // Step 1: Get Cloudinary upload signature from our secure API route
+        const { data: signatureData } = await axios.get('/api/get-upload-signature');
+
+        // Step 2: Upload file directly to Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', signatureData.apiKey);
+        formData.append('timestamp', signatureData.timestamp);
+        formData.append('signature', signatureData.signature);
+        formData.append('upload_preset', signatureData.uploadPreset);
+
+        const uploadRes = await axios.post(
+          `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
+          formData,
+          {
+            onUploadProgress: (event) => {
+              if (event.total) {
+                setProgress(Math.round((event.loaded / event.total) * 100));
+              }
+            },
+          }
+        );
+
+        const secureUrl = uploadRes.data.secure_url;
+        
+        // Step 3: Update user's profile picture URL in Firebase
+        await handleUpdateProfilePicture(secureUrl);
+
       } catch (err: any) {
         console.error('Upload error:', err);
-        setError(err.message || 'Upload failed. Please try again.');
-        toast({ variant: 'destructive', title: 'Upload Failed', description: err.message });
+        const errorMessage = err.response?.data?.error?.message || err.message || 'Upload failed. Please try again.';
+        setError(errorMessage);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: errorMessage });
       } finally {
         setUploading(false);
         setProgress(0);
       }
     },
-    [storage, user, toast, handleUpdateProfilePicture]
+    [user, firestore, toast, handleUpdateProfilePicture]
   );
   
   const handleRemovePicture = async () => {
@@ -167,7 +193,7 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
                     <p className="text-sm text-muted-foreground">
                         <span className="font-semibold text-primary">Click to upload</span> or drag & drop
                     </p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
                 </div>
             )}
              <input 

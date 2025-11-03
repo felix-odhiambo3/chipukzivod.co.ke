@@ -1,4 +1,10 @@
+
 'use client';
+
+// This file is no longer used for uploads since switching to Cloudinary.
+// It is kept for reference or potential future use with Firebase Storage.
+// The new upload logic is in `src/app/settings/profile-image-upload.tsx`
+// and `src/app/api/get-upload-signature/route.ts`.
 
 import {
   ref as storageRef,
