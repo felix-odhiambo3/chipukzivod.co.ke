@@ -68,7 +68,7 @@ export default function FAQsPage() {
                     </CardHeader>
                     <CardContent>
                         <p className="text-muted-foreground mb-4">If you can't find the answer you're looking for, please don't hesitate to reach out to us directly.</p>
-                        <Link href="/contact" className="font-semibold text-primary hover:underline">
+                        <Link href="/contact#contact-form" className="font-semibold text-primary hover:underline">
                             Contact Us
                         </Link>
                     </CardContent>
