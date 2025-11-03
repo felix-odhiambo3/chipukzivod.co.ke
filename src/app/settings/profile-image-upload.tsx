@@ -61,8 +61,15 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
   const handleFile = useCallback(
     async (file: File | null) => {
       if (!file) return;
-      if (!user || !firestore) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User not authenticated or database not available.' });
+      
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+      if (!cloudName || !uploadPreset) {
+        const errorMsg = 'Cloudinary environment variables are not properly configured.';
+        console.error(errorMsg);
+        setError(errorMsg);
+        toast({ variant: 'destructive', title: 'Configuration Error', description: errorMsg });
         return;
       }
 
@@ -71,19 +78,12 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       setProgress(0);
 
       try {
-        // Step 1: Get Cloudinary upload signature from our secure API route
-        const { data: signatureData } = await axios.get('/api/get-upload-signature');
-
-        // Step 2: Upload file directly to Cloudinary
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('api_key', signatureData.apiKey);
-        formData.append('timestamp', signatureData.timestamp);
-        formData.append('signature', signatureData.signature);
-        formData.append('upload_preset', signatureData.uploadPreset);
+        formData.append('upload_preset', uploadPreset);
 
         const uploadRes = await axios.post(
-          `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
           formData,
           {
             onUploadProgress: (event) => {
@@ -95,8 +95,6 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
         );
 
         const secureUrl = uploadRes.data.secure_url;
-        
-        // Step 3: Update user's profile picture URL in Firebase
         await handleUpdateProfilePicture(secureUrl);
 
       } catch (err: any) {
@@ -109,7 +107,7 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
         setProgress(0);
       }
     },
-    [user, firestore, toast, handleUpdateProfilePicture]
+    [user, firestore, toast, handleUpdateProfilePicture, auth]
   );
   
   const handleRemovePicture = async () => {

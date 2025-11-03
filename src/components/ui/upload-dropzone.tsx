@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
@@ -37,6 +38,17 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
         toast({ variant: 'destructive', title: 'Error', description: 'User not authenticated or database not available.' });
         return;
       }
+      
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+      if (!cloudName || !uploadPreset) {
+        const errorMsg = 'Cloudinary environment variables are not properly configured.';
+        console.error(errorMsg);
+        setError(errorMsg);
+        toast({ variant: 'destructive', title: 'Configuration Error', description: errorMsg });
+        return;
+      }
 
       setUploading(true);
       setError(null);
@@ -51,19 +63,12 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
       }
 
       try {
-        // Step 1: Get Cloudinary upload signature from our secure API route
-        const { data: signatureData } = await axios.get('/api/get-upload-signature');
-
-        // Step 2: Upload file directly to Cloudinary
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('api_key', signatureData.apiKey);
-        formData.append('timestamp', signatureData.timestamp);
-        formData.append('signature', signatureData.signature);
-        formData.append('upload_preset', signatureData.uploadPreset);
+        formData.append('upload_preset', uploadPreset);
 
         const uploadRes = await axios.post(
-          `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
+          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
           formData,
           {
             onUploadProgress: (event) => {
@@ -77,7 +82,7 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
         const secureUrl = uploadRes.data.secure_url;
         const publicId = uploadRes.data.public_id;
         
-        // Step 3: Store media metadata in Firestore
+        // Store media metadata in Firestore
         const galleryCol = collection(firestore, uploadCollection);
         const docRef = await addDoc(galleryCol, {
             url: secureUrl,
