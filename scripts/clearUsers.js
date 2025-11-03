@@ -1,4 +1,4 @@
-
+require('dotenv').config({ path: './.env' });
 // This script is used to delete all non-admin users from Firebase Authentication and Firestore.
 // It is idempotent and safe to run multiple times.
 // WARNING: This is a destructive operation and cannot be undone.

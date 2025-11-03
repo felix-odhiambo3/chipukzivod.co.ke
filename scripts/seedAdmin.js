@@ -1,4 +1,4 @@
-
+require('dotenv').config({ path: './.env' });
 // This script is used to seed the database with a default admin user.
 // It is idempotent, meaning it can be run multiple times without creating duplicate users.
 
