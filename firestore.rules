@@ -78,6 +78,15 @@ service cloud.firestore {
     function isPublishedOrAdmin(status) {
         return status == 'published' || isAdmin();
     }
+    
+    function isUpdatingAllowedFields(allowedFields) {
+      let incomingKeys = request.resource.data.keys();
+      let currentKeys = resource.data.keys();
+      // Check that no fields are being removed
+      let onlyAllowedFields = incomingKeys.removeAll(currentKeys).size() == 0;
+      // Check that only allowed fields are being modified
+      return incomingKeys.hasAll(allowedFields) && onlyAllowedFields;
+    }
 
     /***************** Events Collection Rules *****************/
     /**
@@ -114,20 +123,13 @@ service cloud.firestore {
      * @principle Enforces user ownership and restricts role modification.
      */
     match /users/{userId} {
-      // Read rules: Allow users to read their own profile, and admins to read any profile.
       allow get: if isOwner(userId) || isAdmin();
       allow list: if false;
 
-      // Write rules:
-      // - Allow creation only if the authenticated user's ID matches the document ID,
-      //   and the 'role' field is explicitly set to 'user'.
-      allow create: if isOwner(userId)
-                    && request.resource.data.role == 'user';
+      allow create: if isOwner(userId) && request.resource.data.role == 'member';
 
-      // - Allow update if the authenticated user owns the profile and the 'role' field is not being modified.
-      allow update: if isExistingOwner(userId)
-                    && !( 'role' in request.resource.data )
-                    && request.resource.data.email == resource.data.email; //Prevent email modification
+      allow update: if isOwner(userId) && isUpdatingAllowedFields(['displayName', 'photoURL']);
+
       allow delete: if false;
     }
 
