@@ -10,14 +10,14 @@ import { config } from 'dotenv';
 
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
-  // Ensure environment variables are loaded
-  config();
-
   const appName = 'admin-actions';
   const existingApp = getApps().find(app => app.name === appName);
   if (existingApp) {
     return existingApp;
   }
+  
+  // Ensure environment variables are loaded.
+  config({ path: '.env' });
 
   // Use environment variables and correctly parse the private key.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
@@ -26,7 +26,7 @@ function initializeAdminApp(): App {
     throw new Error('Firebase admin environment variables are not set or are invalid.');
   }
   
-  // THE FIX: Replace escaped newlines with actual newlines.
+  // CRITICAL FIX: Replace escaped newlines with actual newlines.
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   const firebaseAdminConfig = {
@@ -164,9 +164,8 @@ export async function updateUser(uid: string, data: Partial<z.infer<typeof userU
 export async function deleteUser(uid: string) {
     try {
         const userToDelete = await adminAuth.getUser(uid);
-        const claims = userToDelete.customClaims;
-
-        if (claims && claims.role === 'admin') {
+        
+        if (userToDelete.email?.toLowerCase() === ADMIN_EMAIL) {
           throw new Error('The primary admin account cannot be deleted.');
         }
 
@@ -202,3 +201,4 @@ export async function sendPasswordReset(email: string) {
   console.log('Password reset link for admin action:', link);
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
 }
+

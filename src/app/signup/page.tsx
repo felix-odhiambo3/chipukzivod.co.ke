@@ -67,10 +67,10 @@ export default function SignupPage() {
     },
   });
 
-  const handleLoginSuccess = useCallback((loggedInUser: User) => {
+  const handleLoginSuccess = useCallback((loggedInUser: User & { role?: 'admin' | 'member' }) => {
     // The user's custom claims are decoded on the client,
     // so we can trust `loggedInUser.role` here for redirection.
-    if ((loggedInUser as any).role === 'admin') {
+    if (loggedInUser.role === 'admin') {
       router.replace('/admin');
     } else {
       router.replace('/dashboard');
@@ -89,7 +89,8 @@ export default function SignupPage() {
         displayName: values.displayName,
         email: values.email,
         password: values.password,
-        role: 'member', // Explicitly set role to member, although backend enforces this
+        role: 'member', // Explicitly set role to member, backend also enforces this
+        photoURL: '', // Provide empty photoURL initially
       });
 
       toast({

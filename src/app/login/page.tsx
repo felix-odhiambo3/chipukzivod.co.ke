@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect, useCallback } from 'react';
-import type { AuthError, User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -37,7 +37,7 @@ export default function LoginPage() {
     },
   });
   
-  const handleLoginSuccess = useCallback((loggedInUser: User) => {
+  const handleLoginSuccess = useCallback((loggedInUser: User & { role?: 'admin' | 'member' }) => {
     if (loggedInUser.role === 'admin') {
       router.replace('/admin');
     } else {
@@ -89,7 +89,10 @@ export default function LoginPage() {
   if (isUserLoading || user) {
     return (
         <div className="flex h-screen items-center justify-center">
-            <p>Loading...</p>
+             <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">Loading...</p>
+            </div>
         </div>
     );
   }
