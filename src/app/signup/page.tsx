@@ -68,8 +68,6 @@ export default function SignupPage() {
   });
 
   const handleLoginSuccess = useCallback((loggedInUser: User & { role?: 'admin' | 'member' }) => {
-    // The user's custom claims are decoded on the client,
-    // so we can trust `loggedInUser.role` here for redirection.
     if (loggedInUser.role === 'admin') {
       router.replace('/admin');
     } else {
@@ -102,6 +100,7 @@ export default function SignupPage() {
         await signInWithEmailAndPassword(auth, values.email, values.password);
         // The useEffect hook will handle redirection based on the user's role.
       } else {
+         // Fallback if auth is not available for some reason
         router.push('/login');
       }
 

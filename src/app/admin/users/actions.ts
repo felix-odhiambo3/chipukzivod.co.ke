@@ -87,11 +87,14 @@ export async function createUser(data: UserFormData) {
   // Check if email is already in use
   try {
     await adminAuth.getUserByEmail(data.email);
+    // If the above line does not throw, it means the user exists.
     throw new Error('An account with this email already exists.');
   } catch (error: any) {
+    // We expect a 'user-not-found' error for a new user. If it's any other error, re-throw it.
     if (error.code !== 'auth/user-not-found') {
-      throw error; // Re-throw if it's not the "user not found" error we expect
+      throw error;
     }
+    // If user is not found, we can proceed with creation.
   }
 
 
@@ -113,6 +116,7 @@ export async function createUser(data: UserFormData) {
     displayName: data.displayName,
     photoURL: data.photoURL,
     role: role, // Storing role here is for client-side display convenience
+    createdAt: adminDb.FieldValue.serverTimestamp(),
   });
 
   return { uid: userRecord.uid };
