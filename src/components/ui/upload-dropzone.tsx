@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
-import { useStorage, useUser } from '@/firebase';
-import { uploadFileToStorage } from '@/firebase/storage';
+import { useUser } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import axios from 'axios';
 
 interface UploadDropzoneProps {
   uploadCollection: string;
@@ -26,7 +26,6 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
   const [preview, setPreview] = useState<{ type: 'image' | 'video'; url: string } | null>(null);
   
   const inputRef = useRef<HTMLInputElement>(null);
-  const storage = useStorage();
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -52,12 +51,37 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
       }
 
       try {
-        const { url, path } = await uploadFileToStorage(storage, file, user.uid, setProgress);
+        // Step 1: Get Cloudinary upload signature from our secure API route
+        const { data: signatureData } = await axios.get('/api/get-upload-signature');
+
+        // Step 2: Upload file directly to Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', signatureData.apiKey);
+        formData.append('timestamp', signatureData.timestamp);
+        formData.append('signature', signatureData.signature);
+        formData.append('upload_preset', signatureData.uploadPreset);
+
+        const uploadRes = await axios.post(
+          `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
+          formData,
+          {
+            onUploadProgress: (event) => {
+              if (event.total) {
+                setProgress(Math.round((event.loaded / event.total) * 100));
+              }
+            },
+          }
+        );
+
+        const secureUrl = uploadRes.data.secure_url;
+        const publicId = uploadRes.data.public_id;
         
-        const galleryCol = collection(firestore, 'gallery');
-        await addDoc(galleryCol, {
-            url,
-            path,
+        // Step 3: Store media metadata in Firestore
+        const galleryCol = collection(firestore, uploadCollection);
+        const docRef = await addDoc(galleryCol, {
+            url: secureUrl,
+            path: publicId, // Store Cloudinary's public_id as the path
             title: file.name,
             caption: '',
             type: file.type.startsWith('image/') ? 'image' : 'video',
@@ -69,12 +93,13 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
 
         toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.` });
         if (onUploadSuccess) {
-          onUploadSuccess({ url, docPath: `gallery/${path}` });
+          onUploadSuccess({ url: secureUrl, docPath: docRef.path });
         }
       } catch (err: any) {
         console.error('Upload error:', err);
-        setError(err.message || 'Upload failed. Please try again.');
-        toast({ variant: 'destructive', title: 'Upload Failed', description: err.message });
+        const errorMessage = err.response?.data?.error?.message || err.message || 'Upload failed. Please try again.';
+        setError(errorMessage);
+        toast({ variant: 'destructive', title: 'Upload Failed', description: errorMessage });
       } finally {
         setUploading(false);
         setProgress(0);
@@ -84,18 +109,18 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
         setPreview(null);
       }
     },
-    [storage, user, onUploadSuccess, toast, firestore, preview]
+    [uploadCollection, onUploadSuccess, user, firestore, toast, preview]
   );
 
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    const file = e.dataTransfer.files?.[0];
     handleFile(file || null);
   }, [handleFile]);
 
   const onInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
+    const file = e.target.files?.[0];
     handleFile(file || null);
   }, [handleFile]);
 
