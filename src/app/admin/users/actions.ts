@@ -1,9 +1,8 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import * as z from 'zod';
-
-const { adminAuth, adminDb } = getFirebaseAdmin();
 
 const userFormSchema = z.object({
   displayName: z.string().min(2),
@@ -23,6 +22,8 @@ export type UserFormData = z.infer<typeof userFormSchema>;
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 
 export async function createUser(data: UserFormData) {
+  const { adminAuth, adminDb } = getFirebaseAdmin();
+
   const validation = userFormSchema.safeParse(data);
   if (!validation.success) {
     throw new Error('Invalid user data.');
@@ -72,6 +73,7 @@ export async function createUser(data: UserFormData) {
 }
 
 export async function updateUser(uid: string, data: Partial<z.infer<typeof userUpdateSchema>>) {
+  const { adminAuth, adminDb } = getFirebaseAdmin();
   const { displayName, role, photoURL } = data;
 
   const authUpdates: any = {};
@@ -117,6 +119,7 @@ export async function updateUser(uid: string, data: Partial<z.infer<typeof userU
 }
 
 export async function deleteUser(uid: string) {
+    const { adminAuth, adminDb } = getFirebaseAdmin();
     try {
         const userToDelete = await adminAuth.getUser(uid);
         
@@ -147,6 +150,7 @@ export async function deleteUser(uid: string) {
 }
 
 export async function sendPasswordReset(email: string) {
+  const { adminAuth } = getFirebaseAdmin();
   const actionCodeSettings = {
     url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/login`,
     handleCodeInApp: true,
