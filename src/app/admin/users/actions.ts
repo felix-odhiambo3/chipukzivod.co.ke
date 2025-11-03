@@ -1,6 +1,9 @@
-
 'use server';
-import 'dotenv/config';
+
+import { config } from 'dotenv';
+import path from 'path';
+config({ path: path.resolve(process.cwd(), '.env') });
+
 import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -74,21 +77,15 @@ export async function createUser(data: UserFormData) {
     throw new Error('Password is required to create a new user.');
   }
   
-  // CRITICAL: Public signup must never create an admin.
-  // The `role` from the client is ignored, always defaults to 'member'.
   const role = 'member';
 
-  // Check if email is already in use
   try {
     await adminAuth.getUserByEmail(data.email);
-    // If the above line does not throw, it means the user exists.
     throw new Error('An account with this email already exists.');
   } catch (error: any) {
-    // We expect a 'user-not-found' error for a new user. If it's any other error, re-throw it.
     if (error.code !== 'auth/user-not-found') {
       throw error;
     }
-    // If user is not found, we can proceed with creation.
   }
 
 
