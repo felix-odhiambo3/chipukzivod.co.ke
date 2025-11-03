@@ -5,10 +5,6 @@ const ADMIN_PASSWORD = 'Admin123!';
 
 let adminApp;
 
-// --- Initialize Firebase Admin SDK ---
-// This is the secure way to initialize on the server.
-// It uses environment variables and handles the private key formatting.
-
 // Helper function to initialize the app
 function initializeAdminApp() {
   if (admin.apps.length > 0) {
