@@ -7,7 +7,6 @@ import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
 import { config } from 'dotenv';
 
-
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
   const appName = 'admin-actions';
@@ -201,4 +200,3 @@ export async function sendPasswordReset(email: string) {
   console.log('Password reset link for admin action:', link);
   return { message: `A password reset link for ${email} has been generated. Check server logs.` };
 }
-
