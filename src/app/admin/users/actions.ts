@@ -15,7 +15,7 @@ function initializeAdminApp(): App {
     return existingApp;
   }
   
-  // Ensure environment variables are loaded.
+  // Ensure environment variables are loaded before use.
   config({ path: '.env' });
 
   // Use environment variables and correctly parse the private key.
