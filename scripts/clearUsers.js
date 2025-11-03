@@ -1,4 +1,3 @@
-
 const admin = require('firebase-admin');
 
 const ADMIN_EMAIL_TO_PROTECT = 'admin@chipukizivod.co.ke';
