@@ -62,9 +62,8 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
 
-      if (!cloudName || !uploadPreset || !apiKey) {
+      if (!cloudName || !uploadPreset) {
         const errorMsg = 'Cloudinary environment variables are not properly configured.';
         console.error(errorMsg);
         setError(errorMsg);
@@ -80,10 +79,9 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', uploadPreset);
-        formData.append('api_key', apiKey);
 
         const uploadRes = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+          `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
           formData,
           {
             onUploadProgress: (event) => {
