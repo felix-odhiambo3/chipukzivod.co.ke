@@ -8,9 +8,10 @@ import * as z from 'zod';
 
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
-  const existingApps = getApps();
-  if (existingApps.length > 0) {
-    return existingApps.find(app => app.name.startsWith('admin-actions-')) || initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
+  const appName = 'admin-actions';
+  const existingApp = getApps().find(app => app.name === appName);
+  if (existingApp) {
+    return existingApp;
   }
 
   // Use environment variables and correctly parse the private key.
@@ -32,13 +33,10 @@ function initializeAdminApp(): App {
   };
   
   try {
-    return initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
+    return initializeApp(firebaseAdminConfig, appName);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
     // Throw a more descriptive error to help with debugging.
-    if (error.code === 'app/duplicate-app') {
-        return getApps().find(app => app.name.startsWith('admin-actions-')) || initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
-    }
     throw new Error('Failed to initialize Firebase Admin SDK. Please check your credentials and server logs.');
   }
 }
