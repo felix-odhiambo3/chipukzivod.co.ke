@@ -120,8 +120,8 @@ export function UserForm({ existingUser, onFormSubmit }: UserFormProps) {
                   type="email"
                   placeholder="user@example.com"
                   {...field}
-                  // Allow changing email only for new users
-                  disabled={!!existingUser && field.value !== 'admin@chipukizivod.co.ke'}
+                  // Prevent email change for existing users to maintain consistency.
+                  disabled={!!existingUser}
                 />
               </FormControl>
               <FormMessage />

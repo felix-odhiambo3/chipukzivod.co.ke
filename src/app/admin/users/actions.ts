@@ -10,7 +10,7 @@ import * as z from 'zod';
 function initializeAdminApp(): App {
   const existingApps = getApps();
   if (existingApps.length > 0) {
-    return existingApps[0];
+    return existingApps.find(app => app.name.startsWith('admin-actions-')) || initializeApp(firebaseAdminConfig, `admin-actions-${Date.now()}`);
   }
 
   // Use environment variables and correctly parse the private key.
@@ -52,7 +52,7 @@ const userFormSchema = z.object({
   displayName: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(6).optional(),
-  role: z.enum(['member', 'admin']).optional(),
+  role: z.enum(['member', 'admin']).default('member'), // Default to member
   photoURL: z.string().url().optional().or(z.literal('')),
 });
 
@@ -75,17 +75,20 @@ export async function createUser(data: UserFormData) {
     throw new Error('Password is required to create a new user.');
   }
   
-  let role: 'admin' | 'member' = 'member';
+  // CRITICAL: Public signup must never create an admin.
+  // The `role` from the client is ignored, always defaults to 'member'.
+  const role: 'member' = 'member';
 
-  // Securely determine role based on email
-  if (data.email.toLowerCase() === ADMIN_EMAIL) {
-    // Check if an admin already exists
-    const adminUsers = await adminDb.collection('users').where('role', '==', 'admin').get();
-    if (!adminUsers.empty) {
-        throw new Error('An admin account already exists. Only one admin account is permitted.');
+  // Check if email is already in use
+  try {
+    await adminAuth.getUserByEmail(data.email);
+    throw new Error('An account with this email already exists.');
+  } catch (error: any) {
+    if (error.code !== 'auth/user-not-found') {
+      throw error; // Re-throw if it's not the "user not found" error we expect
     }
-    role = 'admin';
   }
+
 
   // Create user in Firebase Auth
   const userRecord = await adminAuth.createUser({
@@ -98,24 +101,14 @@ export async function createUser(data: UserFormData) {
   // Set custom claim for role. This is the secure way to handle roles.
   await adminAuth.setCustomUserClaims(userRecord.uid, { role });
 
-  const batch = adminDb.batch();
-
   // Create user profile in Firestore
   const userDocRef = adminDb.collection('users').doc(userRecord.uid);
-  batch.set(userDocRef, {
+  await userDocRef.set({
     email: data.email,
     displayName: data.displayName,
     photoURL: data.photoURL,
     role: role, // Storing role here is for client-side display convenience
   });
-
-  // If the user is an admin, add them to the admin roles collection
-  if (role === 'admin') {
-      const adminRoleRef = adminDb.collection('roles_admin').doc(userRecord.uid);
-      batch.set(adminRoleRef, { isAdmin: true });
-  }
-
-  await batch.commit();
 
   return { uid: userRecord.uid };
 }
@@ -144,12 +137,12 @@ export async function updateUser(uid: string, data: Partial<z.infer<typeof userU
   }
 
   if (role) {
-    if (role === 'admin') {
-      const userToMakeAdmin = await adminAuth.getUser(uid);
-      if (userToMakeAdmin.email?.toLowerCase() !== ADMIN_EMAIL) {
-        throw new Error('Only the designated email can be assigned the admin role.');
-      }
+    const userToUpdate = await adminAuth.getUser(uid);
+    // SECURITY: Only allow the designated admin email to be promoted to admin.
+    if (role === 'admin' && userToUpdate.email?.toLowerCase() !== ADMIN_EMAIL) {
+      throw new Error('This user cannot be assigned the admin role.');
     }
+    
     // Securely update the custom claim
     await adminAuth.setCustomUserClaims(uid, { role });
     const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
@@ -183,7 +176,7 @@ export async function deleteUser(uid: string) {
         const userDocRef = adminDb.collection('users').doc(uid);
         batch.delete(userDocRef);
 
-        // Also delete from admin roles collection if they were an admin (shouldn't happen with the check above, but good for safety)
+        // Also delete from admin roles collection if they were an admin
         const adminRoleRef = adminDb.collection('roles_admin').doc(uid);
         batch.delete(adminRoleRef);
 

@@ -68,7 +68,9 @@ export default function SignupPage() {
   });
 
   const handleLoginSuccess = useCallback((loggedInUser: User) => {
-    if (loggedInUser.role === 'admin') {
+    // The user's custom claims are decoded on the client,
+    // so we can trust `loggedInUser.role` here for redirection.
+    if ((loggedInUser as any).role === 'admin') {
       router.replace('/admin');
     } else {
       router.replace('/dashboard');
@@ -87,6 +89,7 @@ export default function SignupPage() {
         displayName: values.displayName,
         email: values.email,
         password: values.password,
+        role: 'member', // Explicitly set role to member, although backend enforces this
       });
 
       toast({
@@ -96,7 +99,7 @@ export default function SignupPage() {
 
       if (auth) {
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        // The useEffect hook will handle redirection based on role
+        // The useEffect hook will handle redirection based on the user's role.
       } else {
         router.push('/login');
       }
@@ -116,7 +119,10 @@ export default function SignupPage() {
   if (isUserLoading || user) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <p>Loading...</p>
+        <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }

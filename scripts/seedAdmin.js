@@ -54,10 +54,34 @@ async function seedAdminUser() {
 
   try {
     // 1. Check if the admin user already exists
-    const user = await adminAuth.getUserByEmail(ADMIN_EMAIL).catch(() => null);
+    let user = await adminAuth.getUserByEmail(ADMIN_EMAIL).catch(() => null);
 
     if (user) {
-      console.log(`✅ Admin account for ${ADMIN_EMAIL} already exists. No action taken.`);
+      console.log(`✅ Admin account for ${ADMIN_EMAIL} already exists. Verifying roles...`);
+      // Ensure custom claims and Firestore documents are correct
+      const claims = user.customClaims;
+      if (!claims || claims.role !== 'admin') {
+        console.log('🔧 Missing or incorrect custom claim. Setting { role: "admin" }...');
+        await adminAuth.setCustomUserClaims(user.uid, { role: 'admin' });
+      }
+
+      const adminRoleDoc = await adminDb.collection('roles_admin').doc(user.uid).get();
+      if (!adminRoleDoc.exists) {
+        console.log('🔧 Missing Firestore admin role document. Creating...');
+        await adminDb.collection('roles_admin').doc(user.uid).set({ isAdmin: true });
+      }
+      
+      const userDoc = await adminDb.collection('users').doc(user.uid).get();
+      if (!userDoc.exists || userDoc.data().role !== 'admin') {
+          console.log('🔧 Missing or incorrect Firestore user document. Creating/updating...');
+          await adminDb.collection('users').doc(user.uid).set({
+              email: ADMIN_EMAIL,
+              displayName: 'Admin User',
+              role: 'admin'
+          }, { merge: true });
+      }
+
+      console.log('✅ Admin user verified and configured correctly.');
       return;
     }
 
@@ -77,17 +101,25 @@ async function seedAdminUser() {
     await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'admin' });
     console.log('✓ Custom claim { role: "admin" } set successfully.');
 
-    // 4. Create the user document in Firestore
+    // 4. Create the user document in Firestore and the admin role document in a batch
+    const batch = adminDb.batch();
+    
     const userDocRef = adminDb.collection('users').doc(userRecord.uid);
-    await userDocRef.set({
-      uid: userRecord.uid,
+    batch.set(userDocRef, {
       email: ADMIN_EMAIL,
       displayName: 'Admin User',
       role: 'admin', // Stored for client-side convenience
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+    console.log(`✓ User document queued for creation in 'users/${userRecord.uid}'.`);
 
-    console.log(`✓ User document created in Firestore at 'users/${userRecord.uid}'.`);
+    const adminRoleRef = adminDb.collection('roles_admin').doc(userRecord.uid);
+    batch.set(adminRoleRef, { isAdmin: true });
+    console.log(`✓ Admin role document queued for creation in 'roles_admin/${userRecord.uid}'.`);
+    
+    await batch.commit();
+    console.log('✓ Batch commit successful.');
+
     console.log('\n🎉 --- Admin Seeding Complete! --- 🎉');
     console.log('You can now log in with the following credentials:');
     console.log(`   Email: ${ADMIN_EMAIL}`);

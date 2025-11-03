@@ -51,7 +51,7 @@ async function clearAllUsers() {
 
   try {
     const allUsers = await adminAuth.listUsers(1000); // Batches of 1000
-    const usersToDelete = allUsers.users.filter(user => user.email !== ADMIN_EMAIL_TO_PROTECT);
+    const usersToDelete = allUsers.users.filter(user => user.email.toLowerCase() !== ADMIN_EMAIL_TO_PROTECT.toLowerCase());
 
     if (usersToDelete.length === 0) {
       console.log('✅ No non-admin users found to delete.');
