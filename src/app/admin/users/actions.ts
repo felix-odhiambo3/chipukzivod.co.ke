@@ -18,10 +18,14 @@ function initializeAdminApp(): App {
   // Ensure environment variables are loaded before use.
   config({ path: '.env' });
 
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-  if (!privateKey) {
-      throw new Error('FIREBASE_PRIVATE_KEY is not set in the environment variables. Please check your .env file.');
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error(
+      'Firebase Admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your .env file.'
+    );
   }
 
   // CRITICAL FIX: Replace escaped newlines with actual newlines.
@@ -29,9 +33,9 @@ function initializeAdminApp(): App {
 
   const firebaseAdminConfig = {
     credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: formattedPrivateKey, // Use the corrected key here.
+      projectId,
+      clientEmail,
+      privateKey: formattedPrivateKey,
     }),
   };
   
@@ -40,7 +44,7 @@ function initializeAdminApp(): App {
   } catch (error: any) {
     console.error('Admin SDK init error', error);
     // Throw a more descriptive error to help with debugging.
-    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY in your .env file is correctly formatted (a single line string with \\n for newlines).');
+    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY in your .env file is a single-line string with \\n for newlines.');
   }
 }
 
