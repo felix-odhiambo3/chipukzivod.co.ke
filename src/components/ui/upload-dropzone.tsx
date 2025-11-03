@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
@@ -6,7 +5,7 @@ import { useUser } from '@/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UploadCloud, File as FileIcon, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UploadCloud, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -41,8 +40,9 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
       
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
 
-      if (!cloudName || !uploadPreset) {
+      if (!cloudName || !uploadPreset || !apiKey) {
         const errorMsg = 'Cloudinary environment variables are not properly configured.';
         console.error(errorMsg);
         setError(errorMsg);
@@ -54,7 +54,6 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
       setError(null);
       setProgress(0);
 
-      // Create a preview for images
       if (file.type.startsWith('image/')) {
         const url = URL.createObjectURL(file);
         setPreview({ type: 'image', url });
@@ -66,6 +65,7 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', uploadPreset);
+        formData.append('api_key', apiKey);
 
         const uploadRes = await axios.post(
           `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
@@ -82,11 +82,10 @@ export function UploadDropzone({ uploadCollection, onUploadSuccess }: UploadDrop
         const secureUrl = uploadRes.data.secure_url;
         const publicId = uploadRes.data.public_id;
         
-        // Store media metadata in Firestore
         const galleryCol = collection(firestore, uploadCollection);
         const docRef = await addDoc(galleryCol, {
             url: secureUrl,
-            path: publicId, // Store Cloudinary's public_id as the path
+            path: publicId,
             title: file.name,
             caption: '',
             type: file.type.startsWith('image/') ? 'image' : 'video',

@@ -1,12 +1,10 @@
-
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
 import { useFirestore, useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UploadCloud, CheckCircle2, AlertCircle, Edit, Trash2 } from 'lucide-react';
-import Image from 'next/image';
+import { UploadCloud, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -64,8 +62,9 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
 
-      if (!cloudName || !uploadPreset) {
+      if (!cloudName || !uploadPreset || !apiKey) {
         const errorMsg = 'Cloudinary environment variables are not properly configured.';
         console.error(errorMsg);
         setError(errorMsg);
@@ -81,6 +80,7 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', uploadPreset);
+        formData.append('api_key', apiKey);
 
         const uploadRes = await axios.post(
           `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
@@ -107,7 +107,7 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
         setProgress(0);
       }
     },
-    [user, firestore, toast, handleUpdateProfilePicture, auth]
+    [user, firestore, toast, auth]
   );
   
   const handleRemovePicture = async () => {
