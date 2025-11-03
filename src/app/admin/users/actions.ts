@@ -3,6 +3,33 @@
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import * as z from 'zod';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary with credentials from environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+/**
+ * Generates a secure signature for Cloudinary uploads.
+ * This should be called from the client-side right before an upload.
+ */
+export async function getCloudinarySignature(paramsToSign: Record<string, any>) {
+  try {
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET!
+    );
+    return { signature };
+  } catch (error) {
+    console.error('Error generating Cloudinary signature:', error);
+    throw new Error('Could not generate upload signature.');
+  }
+}
+
 
 const userFormSchema = z.object({
   displayName: z.string().min(2),

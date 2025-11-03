@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import axios from 'axios';
+import { getCloudinarySignature } from '@/app/admin/users/actions';
 
 interface ProfileImageUploadProps {
   user: User;
@@ -61,9 +62,9 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       if (!file) return;
       
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
 
-      if (!cloudName || !uploadPreset) {
+      if (!cloudName || !apiKey) {
         const errorMsg = 'Cloudinary environment variables are not properly configured.';
         console.error(errorMsg);
         setError(errorMsg);
@@ -76,10 +77,19 @@ export function ProfileImageUpload({ user }: ProfileImageUploadProps) {
       setProgress(0);
 
       try {
+        // 1. Get signature from server
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const paramsToSign = { timestamp };
+        const { signature } = await getCloudinarySignature(paramsToSign);
+
+        // 2. Prepare form data for upload
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', uploadPreset);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('signature', signature);
+        formData.append('api_key', apiKey);
 
+        // 3. Upload to Cloudinary
         const uploadRes = await axios.post(
           `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
           formData,
