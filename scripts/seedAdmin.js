@@ -25,7 +25,7 @@ function initializeAdminApp() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Firebase admin environment variables are not set. Please check your environment configuration.');
+    throw new Error('Firebase admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your environment configuration.');
   }
 
   const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
@@ -40,7 +40,7 @@ function initializeAdminApp() {
     });
   } catch (error) {
     console.error('Error initializing Firebase Admin SDK:', error.message);
-    throw new Error('Failed to initialize Firebase Admin. Ensure your credentials are correct.');
+    throw new Error('Failed to initialize Firebase Admin. Ensure your credentials are correct and the private key is properly formatted.');
   }
 }
 

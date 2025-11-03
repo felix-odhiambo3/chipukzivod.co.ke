@@ -1,8 +1,5 @@
 'use server';
 
-import { config } from 'dotenv';
-config();
-
 import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -40,7 +37,7 @@ function initializeAdminApp(): App {
     return initializeApp(firebaseAdminConfig, appName);
   } catch (error: any) {
     console.error('Admin SDK init error', error);
-    throw new Error('Failed to parse private key: ' + error.message + '. Please ensure FIREBASE_PRIVATE_KEY is correctly formatted in your environment.');
+    throw new Error('Failed to parse private key. Ensure FIREBASE_PRIVATE_KEY is correctly formatted in your environment. ' + error.message);
   }
 }
 
