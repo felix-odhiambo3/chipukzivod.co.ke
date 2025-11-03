@@ -5,9 +5,14 @@ import { getApps, initializeApp, App, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as z from 'zod';
+import { config } from 'dotenv';
+
 
 // This utility function ensures the Firebase Admin app is initialized only once.
 function initializeAdminApp(): App {
+  // Ensure environment variables are loaded
+  config();
+
   const appName = 'admin-actions';
   const existingApp = getApps().find(app => app.name === appName);
   if (existingApp) {
