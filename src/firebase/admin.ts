@@ -1,3 +1,4 @@
+
 import admin from 'firebase-admin';
 
 // This is a singleton pattern to ensure we only initialize the Firebase Admin SDK once.
