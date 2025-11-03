@@ -56,6 +56,9 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Chipukizi VOD Cooperative Society. All rights reserved.</p>
+          <p className="mt-2">
+            Powered by <a href="https://wa.me/254748809701" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">Felafrika Technologies</a>
+          </p>
         </div>
       </div>
     </footer>
