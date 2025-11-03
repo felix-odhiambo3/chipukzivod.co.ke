@@ -3,7 +3,6 @@ const admin = require('firebase-admin');
 
 const ADMIN_EMAIL_TO_PROTECT = 'admin@chipukizivod.co.ke';
 
-let adminApp;
 // --- Initialize Firebase Admin SDK ---
 function initializeAdminApp() {
   if (admin.apps.length > 0) {
@@ -33,19 +32,21 @@ function initializeAdminApp() {
   }
 }
 
-try {
-  adminApp = initializeAdminApp();
-} catch(error) {
-    console.error(error);
-    process.exit(1);
-}
-
-const adminAuth = admin.auth(adminApp);
-const adminDb = admin.firestore(adminApp);
 
 async function clearAllUsers() {
   console.log('--- Starting User Deletion Process ---');
   console.log('WARNING: This will permanently delete all non-admin user accounts.');
+  
+  let adminApp;
+  try {
+    adminApp = initializeAdminApp();
+  } catch(error) {
+      console.error(error);
+      process.exit(1);
+  }
+  
+  const adminAuth = admin.auth(adminApp);
+  const adminDb = admin.firestore(adminApp);
 
   try {
     const allUsers = await adminAuth.listUsers(1000); // Batches of 1000

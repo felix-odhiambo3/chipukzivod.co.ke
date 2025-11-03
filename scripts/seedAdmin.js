@@ -4,8 +4,6 @@ const admin = require('firebase-admin');
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
 
-let adminApp;
-
 // Helper function to initialize the app
 function initializeAdminApp() {
   if (admin.apps.length > 0) {
@@ -35,18 +33,21 @@ function initializeAdminApp() {
   }
 }
 
-try {
-  adminApp = initializeAdminApp();
-} catch(error) {
-    console.error(error);
-    process.exit(1);
-}
-
-const adminAuth = admin.auth(adminApp);
-const adminDb = admin.firestore(adminApp);
 
 async function seedAdminUser() {
   console.log('--- Starting Admin User Seeding ---');
+
+  let adminApp;
+  try {
+    adminApp = initializeAdminApp();
+  } catch(error) {
+      console.error(error);
+      process.exit(1);
+  }
+
+  const adminAuth = admin.auth(adminApp);
+  const adminDb = admin.firestore(adminApp);
+
 
   try {
     // 1. Check if the admin user already exists

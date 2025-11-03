@@ -1,21 +1,16 @@
-
 import admin from 'firebase-admin';
 
-// This is a singleton pattern to ensure we only initialize the Firebase Admin SDK once.
-let adminApp: admin.app.App | null = null;
-
 /**
- * Initializes and returns the Firebase Admin SDK instance.
- *
- * It ensures that `initializeApp` is called only once per process,
- * which is a requirement for the Firebase Admin SDK.
+ * Initializes and returns the Firebase Admin SDK instance, ensuring it only happens once.
+ * This is the robust way to handle initialization in serverless environments like Next.js.
  */
-function initializeAdminApp() {
+function getFirebaseAdminApp() {
+  // If the app is already initialized, return the existing instance.
   if (admin.apps.length > 0 && admin.apps[0]) {
-    // If the app is already initialized, return the existing instance.
     return admin.apps[0];
   }
 
+  // If not initialized, retrieve credentials from environment variables.
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   // The private key must have its newlines escaped when stored in an environment variable.
@@ -28,36 +23,30 @@ function initializeAdminApp() {
   }
 
   try {
-    const app = admin.initializeApp({
+    // Initialize the Firebase Admin SDK.
+    return admin.initializeApp({
       credential: admin.credential.cert({
         projectId,
         clientEmail,
         privateKey,
       }),
     });
-    return app;
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization failed:', error.message);
     throw new Error(
-      'Failed to initialize Firebase Admin SDK. Ensure your service account credentials in the environment variables are correct. ' +
+      'Failed to initialize Firebase Admin SDK. Ensure your service account credentials are correct. ' +
       error.message
     );
   }
 }
 
 /**
- * Returns a single, shared instance of the initialized Firebase Admin services.
+ * Returns an object containing the initialized Firebase Admin services.
  * This function should be called by all server-side code that needs to interact
  * with Firebase Admin services.
  */
 export function getFirebaseAdmin() {
-  if (!adminApp) {
-    adminApp = initializeAdminApp();
-  }
-  
-  if (!adminApp) {
-    throw new Error("Firebase Admin App could not be initialized.");
-  }
+  const adminApp = getFirebaseAdminApp();
 
   return {
     adminAuth: admin.auth(adminApp),
