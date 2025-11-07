@@ -12,8 +12,17 @@ function initializeAdminApp() {
   if (admin.apps.length > 0) {
     return admin.app();
   }
+  
+  // The service account private key needs to have its newlines properly escaped.
+  const privateKey = serviceAccount.private_key.replace(/\\n/g, '\n');
+  
+  const credential = {
+    ...serviceAccount,
+    private_key: privateKey,
+  }
+
   return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+    credential: admin.credential.cert(credential as admin.ServiceAccount),
   });
 }
 
