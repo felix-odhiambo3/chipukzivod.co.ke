@@ -1,4 +1,6 @@
+
 import admin from 'firebase-admin';
+import serviceAccount from '@/serviceAccountKey.json';
 
 /**
  * Initializes and returns the Firebase Admin SDK instance, ensuring it only happens once.
@@ -10,31 +12,17 @@ function getFirebaseAdminApp() {
     return admin.apps[0];
   }
 
-  // If not initialized, retrieve credentials from environment variables.
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  // The private key must have its newlines escaped when stored in an environment variable.
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error(
-      'Firebase Admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your environment configuration.'
-    );
-  }
-
   try {
-    // Initialize the Firebase Admin SDK.
+    // Initialize the Firebase Admin SDK using the service account file.
     return admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
+      credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+      // Add databaseURL if you use Realtime Database, otherwise it's not needed for Firestore/Auth.
+      // databaseURL: `https://${serviceAccount.project_id}.firebaseio.com` 
     });
   } catch (error: any) {
     console.error('Firebase Admin SDK initialization failed:', error.message);
     throw new Error(
-      'Failed to initialize Firebase Admin SDK. Ensure your service account credentials are correct. ' +
+      'Failed to initialize Firebase Admin SDK. Ensure your service account key is valid. ' +
       error.message
     );
   }
