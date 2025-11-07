@@ -1,6 +1,6 @@
 
+require('dotenv').config();
 const admin = require('firebase-admin');
-const serviceAccount = require('../src/serviceAccountKey.json');
 
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -11,13 +11,25 @@ function initializeAdminApp() {
     return admin.app();
   }
 
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('Missing Firebase admin environment variables. Make sure .env file is populated.');
+  }
+
   try {
     return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
     });
   } catch (error) {
     console.error('Error initializing Firebase Admin SDK:', error.message);
-    throw new Error('Failed to initialize Firebase Admin. Ensure your service account key is valid.');
+    throw new Error('Failed to initialize Firebase Admin.');
   }
 }
 
