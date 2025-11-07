@@ -1,24 +1,40 @@
 
 import admin from 'firebase-admin';
 
+/**
+ * Initializes and returns the Firebase Admin SDK instance, ensuring it only happens once.
+ * This is the robust way to handle initialization in serverless environments like Next.js.
+ * It reads credentials securely from environment variables.
+ */
 export function getAdminApp() {
-  if (admin.apps.length > 0) {
-    return admin.app();
+  // If the app is already initialized, return the existing instance.
+  if (admin.apps.length > 0 && admin.apps[0]) {
+    return admin.apps[0];
   }
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  // IMPORTANT: Replace escaped newlines in the private key string.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase admin environment variables.');
+    throw new Error('Missing Firebase admin environment variables. Please check your .env file.');
   }
 
-  return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId,
-      clientEmail,
-      privateKey,
-    }),
-  });
+  try {
+    // Initialize the Firebase Admin SDK.
+    return admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
+  } catch (error: any) {
+    console.error('Firebase Admin SDK initialization failed:', error.message);
+    throw new Error(
+      'Failed to initialize Firebase Admin SDK. Ensure your service account environment variables are set correctly. ' +
+      error.message
+    );
+  }
 }
