@@ -15,7 +15,7 @@ export function getAdminApp() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   // IMPORTANT: Replace escaped newlines in the private key string.
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error('Missing Firebase admin environment variables. Please check your .env file or hosting provider settings.');
@@ -27,7 +27,9 @@ export function getAdminApp() {
       credential: admin.credential.cert({
         projectId,
         clientEmail,
-        privateKey,
+        privateKey: privateKey.includes('\\n')
+          ? privateKey.replace(/\\n/g, '\n')
+          : privateKey,
       }),
     });
   } catch (error: any) {
