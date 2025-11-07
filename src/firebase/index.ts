@@ -22,7 +22,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: initializeFirestore(firebaseApp, {
-        experimentalForceLongPolling: true,
         cacheSizeBytes: CACHE_SIZE_UNLIMITED
     }),
     storage: getStorage(firebaseApp),
