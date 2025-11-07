@@ -1,5 +1,6 @@
 
 const admin = require('firebase-admin');
+const serviceAccount = require('../src/serviceAccountKey.json');
 
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 const ADMIN_PASSWORD = 'Admin123!';
@@ -7,29 +8,16 @@ const ADMIN_PASSWORD = 'Admin123!';
 // Helper function to initialize the app
 function initializeAdminApp() {
   if (admin.apps.length > 0) {
-    return admin.apps[0];
+    return admin.app();
   }
-
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Firebase admin environment variables (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY) are not set. Please check your environment configuration.');
-  }
-
-  const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
   try {
     return admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey: formattedPrivateKey,
-      }),
+      credential: admin.credential.cert(serviceAccount),
     });
   } catch (error) {
     console.error('Error initializing Firebase Admin SDK:', error.message);
-    throw new Error('Failed to initialize Firebase Admin. Ensure your credentials are correct and the private key is properly formatted.');
+    throw new Error('Failed to initialize Firebase Admin. Ensure your service account key is valid.');
   }
 }
 

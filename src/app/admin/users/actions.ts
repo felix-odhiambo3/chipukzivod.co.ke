@@ -2,9 +2,21 @@
 'use server';
 import 'dotenv/config';
 
-import { getFirebaseAdmin } from '@/firebase/admin';
+import admin from 'firebase-admin';
 import * as z from 'zod';
 import { v2 as cloudinary } from 'cloudinary';
+import serviceAccount from '@/serviceAccountKey.json';
+
+// Helper function to initialize the app within this module
+function initializeAdminApp() {
+  if (admin.apps.length > 0) {
+    return admin.app();
+  }
+  return admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+  });
+}
+
 
 // Configure Cloudinary with credentials from environment variables
 cloudinary.config({
@@ -50,7 +62,9 @@ export type UserFormData = z.infer<typeof userFormSchema>;
 const ADMIN_EMAIL = 'admin@chipukizivod.co.ke';
 
 export async function createUser(data: UserFormData) {
-  const { adminAuth, adminDb } = getFirebaseAdmin();
+  const adminApp = initializeAdminApp();
+  const adminAuth = admin.auth(adminApp);
+  const adminDb = admin.firestore(adminApp);
 
   const validation = userFormSchema.safeParse(data);
   if (!validation.success) {
@@ -94,14 +108,17 @@ export async function createUser(data: UserFormData) {
     displayName: data.displayName,
     photoURL: data.photoURL,
     role: role, // Storing role here is for client-side display convenience
-    createdAt: adminDb.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { uid: userRecord.uid };
 }
 
 export async function updateUser(uid: string, data: Partial<z.infer<typeof userUpdateSchema>>) {
-  const { adminAuth, adminDb } = getFirebaseAdmin();
+  const adminApp = initializeAdminApp();
+  const adminAuth = admin.auth(adminApp);
+  const adminDb = admin.firestore(adminApp);
+  
   const { displayName, role, photoURL } = data;
 
   const authUpdates: any = {};
@@ -147,7 +164,10 @@ export async function updateUser(uid: string, data: Partial<z.infer<typeof userU
 }
 
 export async function deleteUser(uid: string) {
-    const { adminAuth, adminDb } = getFirebaseAdmin();
+    const adminApp = initializeAdminApp();
+    const adminAuth = admin.auth(adminApp);
+    const adminDb = admin.firestore(adminApp);
+    
     try {
         const userToDelete = await adminAuth.getUser(uid);
         
@@ -178,7 +198,9 @@ export async function deleteUser(uid: string) {
 }
 
 export async function sendPasswordReset(email: string) {
-  const { adminAuth } = getFirebaseAdmin();
+  const adminApp = initializeAdminApp();
+  const adminAuth = admin.auth(adminApp);
+  
   const actionCodeSettings = {
     url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002'}/login`,
     handleCodeInApp: true,
