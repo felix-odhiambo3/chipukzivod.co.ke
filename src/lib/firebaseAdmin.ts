@@ -8,8 +8,8 @@ import admin from 'firebase-admin';
  */
 export function getAdminApp() {
   // If the app is already initialized, return the existing instance.
-  if (admin.apps.length > 0 && admin.apps[0]) {
-    return admin.apps[0];
+  if (admin.apps.length > 0) {
+    return admin.app();
   }
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
@@ -18,7 +18,7 @@ export function getAdminApp() {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase admin environment variables. Please check your .env file.');
+    throw new Error('Missing Firebase admin environment variables. Please check your .env file or hosting provider settings.');
   }
 
   try {
