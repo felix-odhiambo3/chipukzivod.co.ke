@@ -279,9 +279,10 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
                                             <AccordionItem value={notification.id} key={notification.id} className="border-b-0">
                                                 <AccordionTrigger 
                                                     className="p-3 hover:bg-accent hover:no-underline"
-                                                    onClick={() => {
-                                                        if (isUnread) handleMarkAsRead(notification.id);
+                                                    onFocus={() => {
+                                                      if (isUnread) handleMarkAsRead(notification.id);
                                                     }}
+                                                    onClick={(e) => e.preventDefault()}
                                                 >
                                                     <div className="flex items-start text-left w-full gap-3">
                                                         {isUnread && <span className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
