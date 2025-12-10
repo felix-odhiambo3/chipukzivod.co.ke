@@ -1,13 +1,13 @@
-
 'use client';
 
 import React, { useCallback, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UploadCloud, AlertCircle, FileText, CheckCircle } from 'lucide-react';
+import { UploadCloud, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import axios from 'axios';
+import { useStorage, useUser } from '@/firebase';
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface PdfUploadDropzoneProps {
   onUploadSuccess: (url: string) => void;
@@ -23,25 +23,20 @@ export function PdfUploadDropzone({ onUploadSuccess, onUploadStateChange, initia
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(initialUrl || null);
   
   const inputRef = useRef<HTMLInputElement>(null);
+  const storage = useStorage();
+  const { user } = useUser();
   const { toast } = useToast();
 
   const handleFile = useCallback(
     async (file: File | null) => {
       if (!file) return;
+      if (!storage || !user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User not authenticated or storage not available.' });
+        return;
+      }
 
       if (file.type !== 'application/pdf') {
         toast({ variant: 'destructive', title: 'Invalid File Type', description: 'Please upload a PDF file.' });
-        return;
-      }
-      
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-      if (!cloudName || !uploadPreset) {
-        const errorMsg = 'Cloudinary environment variables are not properly configured.';
-        console.error(errorMsg);
-        setError(errorMsg);
-        toast({ variant: 'destructive', title: 'Configuration Error', description: errorMsg });
         return;
       }
 
@@ -50,41 +45,46 @@ export function PdfUploadDropzone({ onUploadSuccess, onUploadStateChange, initia
       setError(null);
       setProgress(0);
       setUploadedUrl(null);
+      
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `resources/${user.uid}/${timestamp}_${safeName}`;
+      const ref = storageRef(storage, path);
 
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', uploadPreset);
+      const uploadTask = uploadBytesResumable(ref, file, { contentType: 'application/pdf' });
 
-        const uploadRes = await axios.post(
-          `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-          formData,
-          {
-            onUploadProgress: (event) => {
-              if (event.total) {
-                setProgress(Math.round((event.loaded / event.total) * 100));
-              }
-            },
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const pct = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setProgress(Math.round(pct));
+        },
+        (err) => {
+          console.error('Upload error:', err);
+          setError(err.message);
+          toast({ variant: 'destructive', title: 'Upload Failed', description: err.message });
+          setUploading(false);
+          onUploadStateChange(false);
+          setProgress(0);
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            setUploadedUrl(downloadURL);
+            onUploadSuccess(downloadURL);
+            toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.` });
+          } catch(err: any) {
+            console.error('Get Download URL error:', err);
+            setError(err.message);
+            toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not get download URL.' });
+          } finally {
+            setUploading(false);
+            onUploadStateChange(false);
+            setProgress(0);
           }
-        );
-
-        const secureUrl = uploadRes.data.secure_url;
-        setUploadedUrl(secureUrl);
-        onUploadSuccess(secureUrl);
-        toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.` });
-
-      } catch (err: any) {
-        console.error('Upload error:', err);
-        const errorMessage = err.response?.data?.error?.message || err.message || 'Upload failed. Please try again.';
-        setError(errorMessage);
-        toast({ variant: 'destructive', title: 'Upload Failed', description: errorMessage });
-      } finally {
-        setUploading(false);
-        onUploadStateChange(false);
-        setProgress(0);
-      }
+        }
+      );
     },
-    [onUploadSuccess, onUploadStateChange, toast]
+    [onUploadSuccess, onUploadStateChange, toast, storage, user]
   );
 
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -102,7 +102,7 @@ export function PdfUploadDropzone({ onUploadSuccess, onUploadStateChange, initia
   const containerClasses = cn(
     "border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-colors",
     dragOver ? 'border-primary bg-primary/10' : 'border-border',
-    uploading ? 'cursor-not-allowed' : 'border-border',
+    uploading ? 'cursor-not-allowed' : 'cursor-pointer',
     error ? 'border-destructive' : 'border-border',
     uploadedUrl ? 'border-green-500' : 'border-border',
   );
