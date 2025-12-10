@@ -1,3 +1,4 @@
+
 'use server';
 
 import 'dotenv/config';
@@ -76,7 +77,6 @@ export async function createUser(data: UserFormData) {
     }
     // If user is not found, we can proceed.
   }
-
 
   // Create user in Firebase Auth
   const userRecord = await adminAuth.createUser({
