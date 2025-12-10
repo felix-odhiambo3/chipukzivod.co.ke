@@ -122,7 +122,9 @@ export default function ManageResourcesPage() {
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.title}</TableCell>
                                     <TableCell className="text-muted-foreground">{resource.description}</TableCell>
-                                    <TableCell>{new Date(resource.createdAt.toDate()).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        {resource.createdAt ? new Date(resource.createdAt.toDate()).toLocaleDateString() : 'Pending...'}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex gap-2 justify-end">
                                             <Button asChild variant="outline" size="icon">
