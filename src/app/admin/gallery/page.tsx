@@ -98,9 +98,21 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
 
   const isYoutube = item.type === 'youtube';
   const isVideo = item.type === 'video';
-  const thumbnail = isYoutube
-    ? `https://img.youtube.com/vi/${new URL(item.url).searchParams.get('v')}/hqdefault.jpg`
-    : item.url;
+
+  const thumbnail = useMemo(() => {
+    if (isYoutube) {
+      try {
+        const videoId = new URL(item.url).searchParams.get('v');
+        return videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+      } catch {
+        return null;
+      }
+    }
+    if (item.type === 'image') {
+      return item.url;
+    }
+    return null; // For native videos, we show an icon instead of a thumbnail
+  }, [item.url, item.type, isYoutube]);
 
   const handleDelete = async () => {
     const result = await deleteMedia(item.id);
@@ -127,17 +139,18 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
     <Card className="overflow-hidden group">
       <Link href={`/gallery/${item.id}`} className="block relative">
         <div className="aspect-video bg-muted relative">
-          <Image
-            src={thumbnail || '/placeholder.jpg'}
-            alt={item.title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          {(isYoutube || isVideo) && (
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <PlayCircle className="h-12 w-12 text-white/80" />
-            </div>
+          {thumbnail ? (
+            <Image
+                src={thumbnail}
+                alt={item.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          ) : (
+             <div className="flex items-center justify-center h-full w-full bg-secondary">
+                <PlayCircle className="h-16 w-16 text-muted-foreground" />
+             </div>
           )}
            <div className={`absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded-full ${item.status === 'published' ? 'bg-green-600' : 'bg-amber-600'}`}>
                 {item.status === 'published' ? 'Published' : 'Draft'}
