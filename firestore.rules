@@ -105,33 +105,39 @@ service cloud.firestore {
      * @returns {boolean} True if the update is a valid "mark as read" action, false otherwise.
      */
     function isMarkingAsRead() {
-      // Ensure the request is authenticated
-      if (!isSignedIn()) {
-        return false;
-      }
-      
-      let incomingData = request.resource.data;
-      let existingData = resource.data;
+        // Ensure the request is authenticated
+        if (!isSignedIn()) {
+            return false;
+        }
+        
+        let incomingData = request.resource.data;
+        let existingData = resource.data;
 
-      // Rule: The new 'readBy' array must be a list.
-      if (!(incomingData.readBy is list)) {
-        return false;
-      }
+        // Rule: Only the 'readBy' field can be modified. All other fields must be identical.
+        let otherFieldsChanged = incomingData.diff(existingData).affectedKeys().removeAll(['readBy']).size() > 0;
+        if (otherFieldsChanged) {
+            return false;
+        }
 
-      // Rule: The user must be adding themselves to the list, not removing.
-      // And the user must not already be in the list.
-      let isAddingSelf = incomingData.readBy.size() == existingData.readBy.size() + 1 &&
-          request.auth.uid in incomingData.readBy &&
-          !(request.auth.uid in existingData.readBy);
+        // Rule: The new 'readBy' array must be a list.
+        if (!(incomingData.readBy is list)) {
+            return false;
+        }
+        
+        // Rule: The user must be adding themselves to the list and not already be in it.
+        let isAddingSelf = incomingData.readBy.hasAny([request.auth.uid]) && !existingData.readBy.hasAny([request.auth.uid]);
+        if (!isAddingSelf) {
+            return false;
+        }
+        
+        // Rule: The new list must be exactly one element larger than the old one.
+        if (incomingData.readBy.size() != existingData.readBy.size() + 1) {
+            return false;
+        }
 
-      if (!isAddingSelf) {
-        return false;
-      }
-
-      // Rule: Only the 'readBy' field can be modified. All other fields must be identical.
-      let otherFieldsChanged = incomingData.diff(existingData).affectedKeys().removeAll(['readBy']).size() > 0;
-      
-      return !otherFieldsChanged;
+        // Rule: The rest of the elements in the list must be unchanged.
+        return incomingData.readBy.removeAll([request.auth.uid]).toSet()
+            .difference(existingData.readBy.toSet()).size() == 0;
     }
 
 
