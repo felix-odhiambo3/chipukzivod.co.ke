@@ -128,12 +128,15 @@ export default function GalleryPage() {
         setLoading(true);
         const q = query(
           collection(firestore, 'gallery'),
-          where('status', '==', 'published'),
-          orderBy('createdAt', 'desc')
+          where('status', '==', 'published')
         );
 
         const querySnapshot = await getDocs(q);
         const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GalleryMedia & {id: string}));
+        
+        // Sort on the client side
+        items.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
+        
         setMediaItems(items);
       } catch (err: any) {
         console.error("Error fetching public gallery:", err);
