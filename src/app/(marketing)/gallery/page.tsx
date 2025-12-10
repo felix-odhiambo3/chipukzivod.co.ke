@@ -19,6 +19,7 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
   const { toast } = useToast();
   const isYoutube = item.type === 'youtube';
   const isVideo = item.type === 'video';
+  const isImage = item.type === 'image';
 
   const videoId = isYoutube
     ? (() => {

@@ -59,7 +59,7 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
     <div className="pb-16 space-y-8">
         {event.imageUrl && (
             <div className="relative h-64 md:h-80 w-full rounded-lg overflow-hidden">
-                <Image src={event.imageUrl} alt={event.title} layout="fill" objectFit="cover" />
+                <Image src={event.imageUrl} alt={event.title} layout="fill" objectFit="cover" sizes="100vw" />
                 <div className="absolute inset-0 bg-black/40" />
             </div>
         )}

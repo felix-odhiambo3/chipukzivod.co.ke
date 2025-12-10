@@ -55,7 +55,7 @@ function MediaDisplay({ item }: { item: GalleryMedia }) {
   // Default to image
   return (
     <AspectRatio ratio={16 / 9} className="bg-muted rounded-lg overflow-hidden">
-      <Image src={item.url} alt={item.title} layout="fill" objectFit="contain" />
+      <Image src={item.url} alt={item.title} layout="fill" objectFit="contain" sizes="100vw" />
     </AspectRatio>
   );
 }

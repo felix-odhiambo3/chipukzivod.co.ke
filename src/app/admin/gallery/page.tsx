@@ -132,6 +132,7 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
             alt={item.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
           {(isYoutube || isVideo) && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
