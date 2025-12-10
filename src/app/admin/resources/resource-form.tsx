@@ -22,11 +22,13 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Resource } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
+import { PdfUploadDropzone } from '@/components/ui/pdf-upload-dropzone';
+import { useState } from 'react';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
-  fileUrl: z.string().url('Must be a valid URL to the PDF file.'),
+  fileUrl: z.string().url('A file must be uploaded.'),
 });
 
 type ResourceFormValues = z.infer<typeof formSchema>;
@@ -40,8 +42,13 @@ export function ResourceForm({ resource }: ResourceFormProps) {
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
 
-  const defaultValues: Partial<ResourceFormValues> = resource ? { ...resource } : {};
+  const defaultValues: Partial<ResourceFormValues> = resource ? { ...resource } : {
+    title: '',
+    description: '',
+    fileUrl: ''
+  };
 
   const form = useForm<ResourceFormValues>({
     resolver: zodResolver(formSchema),
@@ -77,6 +84,10 @@ export function ResourceForm({ resource }: ResourceFormProps) {
         toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save the resource. Please try again.' });
     }
   };
+
+  const handleUploadSuccess = (url: string) => {
+    form.setValue('fileUrl', url, { shouldValidate: true });
+  }
 
   return (
     <Card className="max-w-2xl">
@@ -114,20 +125,21 @@ export function ResourceForm({ resource }: ResourceFormProps) {
               name="fileUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>File URL</FormLabel>
+                  <FormLabel>Resource File (PDF)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/document.pdf" {...field} />
+                    <PdfUploadDropzone
+                      onUploadSuccess={handleUploadSuccess}
+                      onUploadStateChange={setIsUploading}
+                      initialUrl={field.value}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    Provide a public URL to the PDF file. You can upload it to a service like Google Drive or Dropbox and share the link.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Saving...' : (resource ? 'Update Resource' : 'Create Resource')}
+              <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
+                {isUploading ? 'Waiting for upload...' : form.formState.isSubmitting ? 'Saving...' : (resource ? 'Update Resource' : 'Create Resource')}
               </Button>
             </div>
           </form>
