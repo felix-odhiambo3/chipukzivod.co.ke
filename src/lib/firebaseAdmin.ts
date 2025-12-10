@@ -26,7 +26,7 @@ export function getAdminApp() {
       credential: admin.credential.cert({
         projectId,
         clientEmail,
-        // Replace escaped newlines from env var
+        // Replace escaped newlines from env var. This is the crucial fix.
         privateKey: privateKey.replace(/\\n/g, '\n'),
       }),
     });
