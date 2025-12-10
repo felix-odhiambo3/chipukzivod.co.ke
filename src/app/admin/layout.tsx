@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/popover"
 import { collection, query, orderBy, doc, updateDoc, arrayUnion, writeBatch } from 'firebase/firestore';
 import type { Notification, UserProfile } from '@/lib/data';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -261,8 +262,8 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
                             <span className="sr-only">Notifications</span>
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80" align="end">
-                         <div className="flex justify-between items-center mb-2">
+                    <PopoverContent className="w-80 p-0" align="end">
+                         <div className="flex justify-between items-center p-4 pb-2">
                             <h4 className="font-medium text-sm">Notifications</h4>
                             {unreadNotifications.length > 0 && (
                                 <Button variant="link" size="sm" className="h-auto p-0" onClick={handleMarkAllAsRead}>Mark all as read</Button>
@@ -270,29 +271,37 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
                         </div>
                         <div className="grid gap-1">
                            {notifications?.length ? (
-                                notifications.slice(0, 5).map(notification => {
-                                    const isUnread = unreadNotifications.some(un => un.id === notification.id);
-                                    return (
-                                        <div
-                                            key={notification.id}
-                                            className={cn(
-                                                "-m-2 flex items-start rounded-lg p-2 transition-all",
-                                                notification.link ? "hover:bg-accent hover:text-accent-foreground cursor-pointer" : "cursor-default"
-                                            )}
-                                            onClick={() => {
-                                                if (isUnread) handleMarkAsRead(notification.id);
-                                                if (notification.link) router.push(notification.link);
-                                                setPopoverOpen(false);
-                                            }}
-                                        >
-                                            {isUnread && <span className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
-                                            <div className="ml-2 space-y-1">
-                                                <p className="text-sm font-medium leading-none">{notification.title}</p>
-                                                <p className="text-sm text-muted-foreground">{notification.message}</p>
-                                            </div>
-                                        </div>
-                                    )
-                                })
+                                <Accordion type="single" collapsible className="w-full">
+                                    {notifications.slice(0, 5).map(notification => {
+                                        const isUnread = unreadNotifications.some(un => un.id === notification.id);
+                                        return (
+                                            <AccordionItem value={notification.id} key={notification.id} className="border-b-0">
+                                                <AccordionTrigger 
+                                                    className="p-3 hover:bg-accent hover:no-underline"
+                                                    onClick={() => {
+                                                        if (isUnread) handleMarkAsRead(notification.id);
+                                                    }}
+                                                >
+                                                    <div className="flex items-start text-left w-full gap-3">
+                                                        {isUnread && <span className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
+                                                        <div className={cn("space-y-1", !isUnread && "ml-5")}>
+                                                            <p className="text-sm font-medium leading-none">{notification.title}</p>
+                                                            <p className="text-sm text-muted-foreground line-clamp-1">{notification.message}</p>
+                                                        </div>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="p-3 pt-0 bg-accent/50">
+                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{notification.message}</p>
+                                                    {notification.link && (
+                                                        <Button variant="link" size="sm" asChild className="p-0 h-auto mt-2" onClick={() => setPopoverOpen(false)}>
+                                                            <Link href={notification.link}>Go to page</Link>
+                                                        </Button>
+                                                    )}
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        )
+                                    })}
+                                </Accordion>
                            ) : (
                              <p className="text-sm text-muted-foreground text-center py-4">No notifications yet.</p>
                            )}
