@@ -1,3 +1,4 @@
+
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -53,11 +54,15 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
         return;
     }
     
-    const announcementData = {
+    const announcementData: any = {
         ...values,
         createdByAdminId: user.uid,
         updatedAt: serverTimestamp(),
     };
+
+    if (!announcementData.mediaUrl) {
+      delete announcementData.mediaUrl;
+    }
 
     try {
         if (announcement) {
@@ -135,5 +140,3 @@ export function AnnouncementForm({ announcement }: AnnouncementFormProps) {
     </Card>
   );
 }
-
-    
