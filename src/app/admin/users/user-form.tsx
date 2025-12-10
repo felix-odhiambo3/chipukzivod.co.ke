@@ -146,6 +146,7 @@ export function UserForm({ existingUser, onFormSubmit }: UserFormProps) {
                 <FormMessage />
               </FormItem>
             )}
+          />
         )}
         <FormField
           control={form.control}
