@@ -1,6 +1,6 @@
 
 'use client';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -13,8 +13,10 @@ import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark, ExternalLink }
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const MediaCard = ({ item }: { item: GalleryMedia }) => {
+  const { toast } = useToast();
   const isYoutube = item.type === 'youtube';
   const videoId = isYoutube
     ? (() => {
@@ -30,6 +32,22 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
   const thumbnail = isYoutube
     ? `https://img.youtube.com/vi/${videoId || 'default'}/hqdefault.jpg`
     : item.url;
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (item.type !== 'youtube') {
+      const link = document.createElement('a');
+      link.href = item.url;
+      link.download = item.title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+        toast({variant: 'destructive', title: 'Download not available for YouTube videos.'})
+    }
+  };
 
   return (
     <Card className="overflow-hidden flex flex-col group">
@@ -61,8 +79,8 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
           <span className="flex items-center gap-1"><MessageSquare className="h-4 w-4" /> 0</span>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8"><Bookmark className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8"><Download className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); toast({ title: 'Login to bookmark!' })}}><Bookmark className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} disabled={isYoutube}><Download className="h-4 w-4" /></Button>
         </div>
       </CardFooter>
     </Card>
