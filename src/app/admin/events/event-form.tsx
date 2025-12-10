@@ -73,13 +73,20 @@ export function EventForm({ event }: EventFormProps) {
         return;
     }
     
-    const eventData = {
+    const eventData: any = {
         ...values,
         startDatetime: values.startDatetime.toISOString(),
         endDatetime: values.endDatetime.toISOString(),
         createdByAdminId: user.uid,
         updatedAt: serverTimestamp(),
     };
+
+    if (!eventData.imageUrl) {
+        delete eventData.imageUrl;
+    }
+    if (!eventData.location) {
+        delete eventData.location;
+    }
 
     try {
         if (event) {
