@@ -150,7 +150,7 @@ service cloud.firestore {
      */
     match /events/{eventId} {
       allow get: if isPublishedOrAdmin(resource.data.status);
-      allow list: if isPublishedOrAdmin(request.query.filters.status); // Not perfectly secure, client needs to filter. A better way is needed if full security is paramount. For now, public list is open.
+      allow list: if request.query.where.size() == 0 || request.query.where[0][2] == 'published' || isAdmin();
       
       allow create: if isAdmin()
                     && request.resource.data.createdByAdminId == request.auth.uid;
@@ -266,7 +266,7 @@ service cloud.firestore {
      */
     match /gallery/{mediaId} {
       allow get: if isPublishedOrAdmin(resource.data.status);
-      allow list: if request.query.filters == null || isPublishedOrAdmin(request.query.filters.status); // Allow admin to list all
+      allow list: if isAdmin() || (request.query.where.size() > 0 && request.query.where[0][2] == 'published');
       
       allow create: if isAdmin() && request.resource.data.createdByAdminId == request.auth.uid;
       allow update: if isAdmin() && resource != null;
