@@ -34,6 +34,7 @@ import {
 import { collection, query, orderBy, doc, updateDoc, arrayUnion, writeBatch } from 'firebase/firestore';
 import type { Notification, UserProfile } from '@/lib/data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useIdleTimeout } from "@/hooks/use-idle-timeout";
 
 const memberNavItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
@@ -329,6 +330,26 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
+
+  const handleIdle = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      toast({
+        title: "Session Expired",
+        description: "You have been logged out due to inactivity.",
+        variant: "destructive"
+      });
+      router.push('/login');
+    } catch (error) {
+      console.error("Error signing out on idle:", error);
+    }
+  };
+
+  // Set timeout to 5 minutes (300000 milliseconds)
+  useIdleTimeout(300000, handleIdle);
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -365,5 +386,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
-
-    
