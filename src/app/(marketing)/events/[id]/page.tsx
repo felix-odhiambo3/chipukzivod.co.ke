@@ -64,7 +64,7 @@ export default function PublicEventDetailPage({ params }: { params: { id: string
             </div>
         )}
 
-        <div className="container mt-[-80px] relative z-10">
+        <div className="container py-8">
             <Card className="p-6 md:p-8">
                 <div className="grid md:grid-cols-3 gap-8">
                     <div className="md:col-span-2">

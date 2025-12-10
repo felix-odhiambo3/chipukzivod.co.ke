@@ -56,9 +56,9 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
   const endDate = new Date(event.endDatetime);
 
   return (
-    <div className="pb-16">
+    <div className="pb-16 space-y-8">
         {event.imageUrl && (
-            <div className="relative h-64 md:h-80 -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 mb-8">
+            <div className="relative h-64 md:h-80 w-full rounded-lg overflow-hidden">
                 <Image src={event.imageUrl} alt={event.title} layout="fill" objectFit="cover" />
                 <div className="absolute inset-0 bg-black/40" />
             </div>
