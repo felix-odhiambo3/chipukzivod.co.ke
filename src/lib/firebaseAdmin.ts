@@ -14,7 +14,6 @@ export function getAdminApp() {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  // IMPORTANT: Replace escaped newlines in the private key string.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
@@ -27,10 +26,8 @@ export function getAdminApp() {
       credential: admin.credential.cert({
         projectId,
         clientEmail,
-        // This is the robust way to handle the private key from an env var.
-        privateKey: privateKey.includes('\\n')
-          ? privateKey.replace(/\\n/g, '\n')
-          : privateKey,
+        // Replace escaped newlines from env var
+        privateKey: privateKey.replace(/\\n/g, '\n'),
       }),
     });
   } catch (error: any) {
