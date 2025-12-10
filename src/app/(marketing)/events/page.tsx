@@ -16,7 +16,7 @@ function EventCard({ event }: { event: Event & { id: string } }) {
     <Card key={event.id} className="overflow-hidden flex flex-col sm:flex-row">
       {event.imageUrl && 
         <div className="w-full sm:w-1/3 relative h-48 sm:h-auto">
-          <Image src={event.imageUrl} alt={event.title} fill style={{objectFit: 'cover'}} data-ai-hint="event photo"/>
+          <Image src={event.imageUrl} alt={event.title} fill style={{objectFit: 'cover'}} sizes="(max-width: 640px) 100vw, 33vw" data-ai-hint="event photo"/>
         </div>
       }
       <div className="w-full sm:w-2/3 flex flex-col">

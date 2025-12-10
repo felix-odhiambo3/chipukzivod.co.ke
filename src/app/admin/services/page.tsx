@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -115,7 +116,7 @@ export default function ManageServicesPage() {
                             <CardHeader>
                                 {service.imageUrl && (
                                     <div className="relative h-48 w-full mb-4 rounded-md overflow-hidden">
-                                        <Image src={service.imageUrl} alt={service.title} layout="fill" objectFit="cover" />
+                                        <Image src={service.imageUrl} alt={service.title} layout="fill" objectFit="cover" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
                                     </div>
                                 )}
                                 <CardTitle>{service.title}</CardTitle>

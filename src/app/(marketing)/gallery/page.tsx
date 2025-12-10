@@ -9,7 +9,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GalleryMedia } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark, ExternalLink } from 'lucide-react';
+import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,8 @@ import { useToast } from '@/hooks/use-toast';
 const MediaCard = ({ item }: { item: GalleryMedia }) => {
   const { toast } = useToast();
   const isYoutube = item.type === 'youtube';
+  const isVideo = item.type === 'video';
+
   const videoId = isYoutube
     ? (() => {
         try {
@@ -29,9 +31,10 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
       })()
     : null;
 
-  const thumbnail = isYoutube
-    ? `https://img.youtube.com/vi/${videoId || 'default'}/hqdefault.jpg`
-    : item.url;
+  const thumbnail = isYoutube && videoId
+    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    : (isImage ? item.url : null);
+
 
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,14 +56,21 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
     <Card className="overflow-hidden flex flex-col group">
       <Link href={`/gallery/${item.id}`} className="block">
         <AspectRatio ratio={16 / 9} className="bg-muted">
-          <Image
-            src={thumbnail || '/placeholder.jpg'}
-            alt={item.title || 'Gallery media'}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="transition-transform duration-300 group-hover:scale-105"
-          />
-          {(item.type === 'video' || isYoutube) && (
+          {thumbnail ? (
+             <Image
+                src={thumbnail}
+                alt={item.title || 'Gallery media'}
+                fill
+                style={{ objectFit: 'cover' }}
+                className="transition-transform duration-300 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+             <div className="flex items-center justify-center h-full w-full bg-secondary">
+                {isVideo ? <PlayCircle className="h-16 w-16 text-muted-foreground" /> : <ImageIcon className="h-16 w-16 text-muted-foreground" />}
+            </div>
+          )}
+          {(isVideo || isYoutube) && !thumbnail && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
               <PlayCircle className="h-16 w-16 text-white/80" />
             </div>

@@ -1,3 +1,4 @@
+
 'use client';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -14,7 +15,7 @@ function ServiceCard({ service }: { service: Service & { id: string } }) {
     <Card key={service.id} className="overflow-hidden flex flex-col">
       {service.imageUrl && (
         <div className="relative h-56 w-full">
-          <Image src={service.imageUrl} alt={service.title} fill style={{objectFit: 'cover'}} data-ai-hint="service photo"/>
+          <Image src={service.imageUrl} alt={service.title} fill style={{objectFit: 'cover'}} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" data-ai-hint="service photo"/>
         </div>
       )}
       <div className="flex flex-col flex-grow">

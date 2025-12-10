@@ -74,7 +74,7 @@ export default function AboutPage() {
               <p>We regularly collaborate with numerous well-known brands, local businesses, NGOs, educational institutions, government agencies, and international organizations. These partners count on Chipukizi VOD Cooperative Society for their digital marketing and entertainment needs, and you can too!</p>
             </div>
             <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden shadow-lg">
-              <Image src="/images/web,1.jpg" alt="Chipukizi VOD Team" fill objectFit="cover" objectPosition="top" data-ai-hint="team photo" />
+              <Image src="/images/web,1.jpg" alt="Chipukizi VOD Team" fill style={{objectFit:"cover"}} sizes="(max-width: 768px) 100vw, 50vw" objectPosition="top" data-ai-hint="team photo" />
             </div>
           </div>
         </section>
@@ -142,7 +142,7 @@ export default function AboutPage() {
                     <Card key={member.name} className="overflow-hidden">
                         <div className={`grid md:grid-cols-3 items-start`}>
                             <div className={`relative h-96 w-full md:h-auto md:aspect-[4/5] ${index % 2 === 1 ? 'md:order-2' : ''}`}>
-                                <Image src={member.image} alt={member.name} fill objectFit="cover" />
+                                <Image src={member.image} alt={member.name} fill style={{objectFit:"cover"}} sizes="(max-width: 768px) 100vw, 33vw" />
                             </div>
                             <div className={`md:col-span-2 p-8 flex flex-col justify-center ${index % 2 === 1 ? 'md:order-1' : ''}`}>
                                 <h3 className="text-2xl font-bold font-headline">{member.name}</h3>

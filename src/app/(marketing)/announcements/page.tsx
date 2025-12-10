@@ -13,7 +13,7 @@ function AnnouncementCard({ announcement }: { announcement: Announcement }) {
     <Card>
       {announcement.mediaUrl && (
          <div className="relative h-56 w-full">
-          <Image src={announcement.mediaUrl} alt={announcement.title} fill style={{objectFit: 'cover'}} data-ai-hint="announcement media"/>
+          <Image src={announcement.mediaUrl} alt={announcement.title} fill style={{objectFit: 'cover'}} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" data-ai-hint="announcement media"/>
         </div>
       )}
       <CardHeader>
@@ -86,5 +86,3 @@ export default function AnnouncementsPage() {
         </div>
     );
 }
-
-    
