@@ -1,3 +1,4 @@
+
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -21,8 +22,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Switch } from '@/components/ui/switch';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, doc, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, doc, serverTimestamp, setDoc, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Event } from '@/lib/data';
@@ -85,19 +85,19 @@ export function EventForm({ event }: EventFormProps) {
         if (event) {
             // Update existing event
             const eventRef = doc(firestore, 'events', event.id);
-            setDocumentNonBlocking(eventRef, { ...eventData, createdAt: event.createdAt }, { merge: true });
+            await setDoc(eventRef, { ...eventData, createdAt: event.createdAt }, { merge: true });
             toast({ title: 'Event Updated', description: 'The event has been successfully updated.' });
         } else {
             // Create new event
             const collectionRef = collection(firestore, 'events');
-            addDocumentNonBlocking(collectionRef, { ...eventData, createdAt: serverTimestamp() });
+            await addDoc(collectionRef, { ...eventData, createdAt: serverTimestamp() });
             toast({ title: 'Event Created', description: 'The new event has been successfully created.' });
         }
         router.push('/admin/events');
         router.refresh();
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error saving event:", error);
-        toast({ variant: 'destructive', title: 'Something went wrong', description: 'Could not save the event. Please try again.' });
+        toast({ variant: 'destructive', title: 'Something went wrong', description: error.message || 'Could not save the event. Please try again.' });
     }
   };
 
