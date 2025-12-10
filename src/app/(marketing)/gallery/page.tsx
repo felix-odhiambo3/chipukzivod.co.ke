@@ -40,7 +40,7 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
     if (item.type !== 'youtube') {
       const link = document.createElement('a');
       link.href = item.url;
-      link.download = item.title;
+      link.download = item.title || 'download';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
