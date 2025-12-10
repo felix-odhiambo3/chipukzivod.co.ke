@@ -54,10 +54,14 @@ export function NotificationForm({ notification }: NotificationFormProps) {
         return;
     }
     
-    const notificationData = {
+    const notificationData: any = {
         ...values,
         updatedAt: serverTimestamp(),
     };
+
+    if (!notificationData.link) {
+      delete notificationData.link;
+    }
 
     try {
         if (notification) {
