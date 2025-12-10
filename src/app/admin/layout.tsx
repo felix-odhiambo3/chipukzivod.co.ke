@@ -206,14 +206,14 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
 
     const unreadNotifications = React.useMemo(() => {
         if (!notifications || !user) return [];
-        return notifications.filter(n => !n.readBy.includes(user.id));
+        return notifications.filter(n => !n.readBy.includes(user.uid));
     }, [notifications, user]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         if (!firestore || !user) return;
         const notifRef = doc(firestore, 'notifications', notificationId);
         await updateDoc(notifRef, {
-            readBy: arrayUnion(user.id)
+            readBy: arrayUnion(user.uid)
         });
     };
 
@@ -222,7 +222,7 @@ function AppHeaderContent({ user }: { user: UserProfile | null }) {
         const batch = writeBatch(firestore);
         unreadNotifications.forEach(notif => {
             const notifRef = doc(firestore, 'notifications', notif.id);
-            batch.update(notifRef, { readBy: arrayUnion(user.id) });
+            batch.update(notifRef, { readBy: arrayUnion(user.uid) });
         });
         await batch.commit();
     };
@@ -356,3 +356,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
+
+    
