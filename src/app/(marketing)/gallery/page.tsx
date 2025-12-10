@@ -1,7 +1,7 @@
 
 'use client';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, where, getDocs } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
@@ -11,7 +11,7 @@ import type { GalleryMedia } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlayCircle, ThumbsUp, MessageSquare, Download, Bookmark, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -105,22 +105,36 @@ const GallerySkeleton = () => (
 
 export default function GalleryPage() {
   const firestore = useFirestore();
+  const [mediaItems, setMediaItems] = useState<(GalleryMedia & {id: string})[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const galleryQuery = useMemoFirebase(() =>
-    firestore
-      ? query(
+  useEffect(() => {
+    async function fetchPublicMedia() {
+      if (!firestore) return;
+
+      try {
+        setLoading(true);
+        const q = query(
           collection(firestore, 'gallery'),
+          where('status', '==', 'published'),
           orderBy('createdAt', 'desc')
-        )
-      : null
-  , [firestore]);
+        );
 
-  const { data: allItems, isLoading } = useCollection<GalleryMedia>(galleryQuery);
+        const querySnapshot = await getDocs(q);
+        const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GalleryMedia & {id: string}));
+        setMediaItems(items);
+      } catch (err: any) {
+        console.error("Error fetching public gallery:", err);
+        setError("Could not load gallery items. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  const mediaItems = useMemo(() => {
-    if (!allItems) return [];
-    return allItems.filter(item => item.type === 'image' || item.type === 'video');
-  }, [allItems]);
+    fetchPublicMedia();
+  }, [firestore]);
+
 
   return (
     <div className="container py-12 md:py-16">
@@ -148,8 +162,10 @@ export default function GalleryPage() {
         </TabsList>
 
         <TabsContent value="uploads" className="mt-8">
-          {isLoading ? (
+          {loading ? (
             <GallerySkeleton />
+          ) : error ? (
+             <div className="text-center py-16 text-destructive">{error}</div>
           ) : mediaItems?.length ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {mediaItems.map(item => <MediaCard key={item.id} item={item} />)}

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { UploadDropzone } from '@/components/ui/upload-dropzone';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
@@ -9,19 +9,121 @@ import type { GalleryMedia } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Image from 'next/image';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlayCircle, Search } from 'lucide-react';
+import { PlayCircle, Search, Edit, Trash2, MoreVertical, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { deleteMedia, toggleMediaStatus, updateMedia } from './actions';
+
+
+const editFormSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters."),
+    caption: z.string().optional(),
+});
+
+function EditMediaDialog({ item, open, onOpenChange }: { item: GalleryMedia, open: boolean, onOpenChange: (open: boolean) => void }) {
+    const { toast } = useToast();
+    
+    const form = useForm<z.infer<typeof editFormSchema>>({
+        resolver: zodResolver(editFormSchema),
+        defaultValues: { title: item.title, caption: item.caption || '' },
+    });
+
+    const onSubmit = async (values: z.infer<typeof editFormSchema>) => {
+        const result = await updateMedia(item.id, values);
+        if (result.success) {
+            toast({ title: "Media Updated" });
+            onOpenChange(false);
+        } else {
+            toast({ variant: 'destructive', title: "Update Failed", description: result.error });
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader><DialogTitle>Edit Media Details</DialogTitle></DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField control={form.control} name="title" render={({ field }) => (<FormItem><FormLabel>Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <FormField control={form.control} name="caption" render={({ field }) => (<FormItem><FormLabel>Caption</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>)} />
+                        <div className="flex justify-end gap-2">
+                           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+                           <Button type="submit" disabled={form.formState.isSubmitting}>Save Changes</Button>
+                        </div>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    )
+}
 
 const MediaCard = ({ item }: { item: GalleryMedia }) => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isToggling, startToggleTransition] = useTransition();
+  const { toast } = useToast();
+
   const isYoutube = item.type === 'youtube';
   const isVideo = item.type === 'video';
   const thumbnail = isYoutube
     ? `https://img.youtube.com/vi/${new URL(item.url).searchParams.get('v')}/hqdefault.jpg`
     : item.url;
 
+  const handleDelete = async () => {
+    const result = await deleteMedia(item.id);
+    if (result.success) {
+        toast({ title: "Media Deleted" });
+    } else {
+        toast({ variant: 'destructive', title: "Delete Failed", description: result.error });
+    }
+  }
+  
+  const handleStatusToggle = () => {
+      startToggleTransition(async () => {
+          const result = await toggleMediaStatus(item.id, item.status || 'published');
+          if (result.success) {
+              toast({ title: "Status Updated", description: `Media is now ${result.newStatus}.` });
+          } else {
+              toast({ variant: 'destructive', title: "Status update failed", description: result.error });
+          }
+      });
+  }
+
   return (
+    <>
     <Card className="overflow-hidden group">
       <Link href={`/gallery/${item.id}`} className="block relative">
         <div className="aspect-video bg-muted relative">
@@ -36,12 +138,38 @@ const MediaCard = ({ item }: { item: GalleryMedia }) => {
               <PlayCircle className="h-12 w-12 text-white/80" />
             </div>
           )}
+           <div className={`absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded-full ${item.status === 'published' ? 'bg-green-600' : 'bg-amber-600'}`}>
+                {item.status === 'published' ? 'Published' : 'Draft'}
+            </div>
         </div>
       </Link>
        <CardHeader>
         <CardTitle className="truncate text-base">{item.title}</CardTitle>
       </CardHeader>
+      <CardFooter className="flex justify-end">
+         <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon"><MoreVertical /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setIsEditOpen(true)}><Edit className="mr-2 h-4 w-4"/>Edit</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setIsDeleteAlertOpen(true)} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4"/>Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+         </DropdownMenu>
+      </CardFooter>
     </Card>
+    <EditMediaDialog item={item} open={isEditOpen} onOpenChange={setIsEditOpen} />
+    <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete "{item.title}". This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };
 

@@ -62,6 +62,7 @@ export type GalleryMedia = {
     caption?: string;
     type: 'image' | 'video' | 'youtube';
     url: string;
+    status: 'published' | 'draft';
     viewCount: number;
     createdByAdminId: string;
     createdAt: any;

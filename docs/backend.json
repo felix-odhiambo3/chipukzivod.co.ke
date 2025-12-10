@@ -234,12 +234,13 @@
         "caption": { "type": "string" },
         "type": { "type": "string", "enum": ["image", "video", "youtube"] },
         "url": { "type": "string", "format": "uri" },
+        "status": { "type": "string", "enum": ["published", "draft"], "default": "published" },
         "viewCount": { "type": "number", "default": 0 },
         "createdByAdminId": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["title", "type", "url", "createdByAdminId"]
+      "required": ["title", "type", "url", "status", "createdByAdminId"]
     },
     "Like": {
         "$schema": "http://json-schema.org/draft-07/schema#",

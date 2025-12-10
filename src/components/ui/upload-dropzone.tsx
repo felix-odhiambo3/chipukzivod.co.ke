@@ -6,7 +6,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { UploadCloud, AlertCircle, Image as ImageIcon, Video, X } from 'lucide-react';
+import { UploadCloud, AlertCircle, Video, X } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -62,7 +62,6 @@ export function UploadDropzone({ onUploadSuccess }: UploadDropzoneProps) {
   const handleFileSelect = (file: File | null) => {
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
         toast({
             variant: 'destructive',
@@ -74,7 +73,7 @@ export function UploadDropzone({ onUploadSuccess }: UploadDropzoneProps) {
 
     setFileToUpload(file);
     setPreviewUrl(URL.createObjectURL(file));
-    form.setValue('title', file.name.replace(/\.[^/.]+$/, "")); // Pre-fill title without extension
+    form.setValue('title', file.name.replace(/\.[^/.]+$/, ""));
   };
 
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
@@ -135,6 +134,7 @@ export function UploadDropzone({ onUploadSuccess }: UploadDropzoneProps) {
           title: values.title,
           caption: values.caption || '',
           type: fileToUpload.type.startsWith('image/') ? 'image' : 'video',
+          status: 'published', // Default to published
           createdByAdminId: user.uid,
           viewCount: 0,
           createdAt: serverTimestamp(),

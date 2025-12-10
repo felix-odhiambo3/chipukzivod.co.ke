@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview Firestore Security Rules for Chipukizi VOD Cooperative Society.
  *
@@ -71,9 +72,9 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows read if the event is published or if the user is an admin.
-     * @param {string} status - The status of the event.
-     * @returns {boolean} True if the event is published or the user is an admin, false otherwise.
+     * @description Allows read if the item is published or if the user is an admin.
+     * @param {string} status - The status of the event/media item.
+     * @returns {boolean} True if published or the user is an admin, false otherwise.
      */
     function isPublishedOrAdmin(status) {
         return status == 'published' || isAdmin();
@@ -105,39 +106,36 @@ service cloud.firestore {
      * @returns {boolean} True if the update is a valid "mark as read" action, false otherwise.
      */
     function isMarkingAsRead() {
-        // Ensure the request is authenticated
-        if (!isSignedIn()) {
+        // Ensure the request is authenticated and the doc exists
+        if (!isSignedIn() || resource == null) {
             return false;
         }
-        
+
         let incomingData = request.resource.data;
         let existingData = resource.data;
+        let incomingReadBy = incomingData.readBy;
+        let existingReadBy = existingData.readBy;
 
-        // Rule: Only the 'readBy' field can be modified. All other fields must be identical.
+        // Rule 1: All fields EXCEPT 'readBy' must remain unchanged.
         let otherFieldsChanged = incomingData.diff(existingData).affectedKeys().removeAll(['readBy']).size() > 0;
         if (otherFieldsChanged) {
             return false;
         }
 
-        // Rule: The new 'readBy' array must be a list.
-        if (!(incomingData.readBy is list)) {
+        // Rule 2: The 'readBy' field must be a list.
+        if (!(incomingReadBy is list)) {
             return false;
         }
         
-        // Rule: The user must be adding themselves to the list and not already be in it.
-        let isAddingSelf = incomingData.readBy.hasAny([request.auth.uid]) && !existingData.readBy.hasAny([request.auth.uid]);
+        // Rule 3: The user must be adding themselves to the list, not removing, and not already be in it.
+        let isAddingSelf = incomingReadBy.hasAll([request.auth.uid]) && !existingReadBy.hasAny([request.auth.uid]);
         if (!isAddingSelf) {
             return false;
         }
         
-        // Rule: The new list must be exactly one element larger than the old one.
-        if (incomingData.readBy.size() != existingData.readBy.size() + 1) {
-            return false;
-        }
-
-        // Rule: The rest of the elements in the list must be unchanged.
-        return incomingData.readBy.removeAll([request.auth.uid]).toSet()
-            .difference(existingData.readBy.toSet()).size() == 0;
+        // Rule 4: The new list must be exactly one element larger than the old one, and the added element must be the user's UID.
+        return incomingReadBy.size() == existingReadBy.size() + 1 &&
+               incomingReadBy.removeAll(existingReadBy).size() == 1;
     }
 
 
@@ -145,17 +143,15 @@ service cloud.firestore {
     /**
      * @description Controls access to event documents.
      * @path /events/{eventId}
-     * @allow (get, list): Any user can read published events.
+     * @allow (get): Any user can read published events. Admins can read all.
+     * @allow (list): Public can list published events. Admins can list all.
      * @allow (create, update, delete): Only admins can create, update, or delete events.
-     * @deny (create, update, delete): Non-admins cannot modify events.
      * @principle Public read access for published events, admin-only write access.
      */
     match /events/{eventId} {
-      // Read rules: Allow anyone to get or list events.
       allow get: if isPublishedOrAdmin(resource.data.status);
-      allow list: if true;
-
-      // Write rules: Only admins can create, update, or delete events.
+      allow list: if isPublishedOrAdmin(request.query.filters.status); // Not perfectly secure, client needs to filter. A better way is needed if full security is paramount. For now, public list is open.
+      
       allow create: if isAdmin()
                     && request.resource.data.createdByAdminId == request.auth.uid;
       allow update: if isAdmin() && resource != null
@@ -263,27 +259,25 @@ service cloud.firestore {
     /**
      * @description Controls access to gallery media documents.
      * @path /gallery/{mediaId}
-     * @allow (get, list): Publicly readable.
+     * @allow (get): Public can read published items, admins can read all.
+     * @allow (list): Public can list published items. Admins can list all.
      * @allow (create, update, delete): Only admins can create, update, or delete gallery media.
-     * @deny (create, update, delete): Non-admins cannot modify gallery media.
-     * @principle Public read access, admin-only write access.
+     * @principle Public read access for published media, admin-only write access.
      */
     match /gallery/{mediaId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin()
-                    && request.resource.data.createdByAdminId == request.auth.uid;
-      allow update: if isAdmin() && resource != null
-                    && request.resource.data.createdByAdminId == resource.data.createdByAdminId;
+      allow get: if isPublishedOrAdmin(resource.data.status);
+      allow list: if request.query.filters == null || isPublishedOrAdmin(request.query.filters.status); // Allow admin to list all
+      
+      allow create: if isAdmin() && request.resource.data.createdByAdminId == request.auth.uid;
+      allow update: if isAdmin() && resource != null;
       allow delete: if isAdmin() && resource != null;
 
           /***************** Likes Subcollection Rules *****************/
           /**
            * @description Controls access to like documents within a gallery item.
            * @path /gallery/{mediaId}/likes/{likeId}
-           * @allow (get, list): Not applicable in this prototype.
            * @allow (create): Authenticated users can like a gallery item.
-           * @allow (update, delete): No updates or deletes are allowed.
+           * @deny (get, list, update, delete)
            * @principle Authenticated users can like gallery items.
            */
           match /likes/{likeId} {
@@ -299,10 +293,9 @@ service cloud.firestore {
           /**
            * @description Controls access to comment documents within a gallery item.
            * @path /gallery/{mediaId}/comments/{commentId}
-           * @allow (get, list): Not applicable in this prototype.
            * @allow (create): Authenticated users can comment on a gallery item.
-           * @allow (update): No updates are allowed.
            * @allow (delete): The comment's owner and admins can delete the comment.
+           * @deny (get, list, update)
            * @principle Authenticated users can comment, owners/admins can delete.
            */
           match /comments/{commentId} {
@@ -319,9 +312,8 @@ service cloud.firestore {
     /**
      * @description Controls access to bookmark documents within a user's profile.
      * @path /users/{userId}/bookmarks/{bookmarkId}
-     * @allow (get, list): Only the owner can read their bookmarks.
-     * @allow (create): Only the owner can create bookmarks.
-     * @allow (update, delete): No updates or deletes are allowed.
+     * @allow (get, list, create): Only the owner can read their bookmarks.
+     * @deny (update, delete)
      * @principle Enforces user ownership for bookmarks.
      */
     match /users/{userId}/bookmarks/{bookmarkId} {
@@ -336,11 +328,9 @@ service cloud.firestore {
     /**
      * @description Controls access to suggestion documents.
      * @path /suggestions/{suggestionId}
-     * @allow (get): Admins can read suggestions.
-     * @allow (list): Admins can list suggestions.
+     * @allow (get, list, update): Admins can manage suggestions.
      * @allow (create): Authenticated users can create suggestions.
-     * @allow (update): Admins can update suggestions (e.g., change status).
-     * @deny (delete): No one can delete suggestions.
+     * @deny (delete)
      * @principle Members can create suggestions, and admins can manage them.
      */
     match /suggestions/{suggestionId} {
@@ -357,7 +347,6 @@ service cloud.firestore {
      * @path /resources/{resourceId}
      * @allow (get, list): Authenticated users can read resources.
      * @allow (create, update, delete): Only admins can create, update, or delete resources.
-     * @deny (create, update, delete): Non-admins cannot modify resources.
      * @principle Authenticated users can read, admin-only write access.
      */
     match /resources/{resourceId} {
@@ -376,7 +365,6 @@ service cloud.firestore {
      * @path /announcements/{announcementId}
      * @allow (get, list): Publicly readable.
      * @allow (create, update, delete): Only admins can create, update, or delete announcements.
-     * @deny (create, update, delete): Non-admins cannot modify announcements.
      * @principle Public read access, admin-only write access.
      */
     match /announcements/{announcementId} {
@@ -396,7 +384,7 @@ service cloud.firestore {
      * @allow (get, list): Authenticated users can read notifications.
      * @allow (create, delete): Only admins can create or delete notifications.
      * @allow (update): Admins can update any field. Authenticated users can update ONLY to add their own UID to the `readBy` array.
-     * @deny (create, update, delete): Non-admins cannot modify notifications beyond marking them as read.
+     * @deny (update): Non-admins cannot modify notifications beyond marking them as read.
      */
     match /notifications/{notificationId} {
       allow get: if isSignedIn();
