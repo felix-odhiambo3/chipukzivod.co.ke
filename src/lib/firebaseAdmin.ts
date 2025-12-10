@@ -27,6 +27,7 @@ export function getAdminApp() {
       credential: admin.credential.cert({
         projectId,
         clientEmail,
+        // This is the robust way to handle the private key from an env var.
         privateKey: privateKey.includes('\\n')
           ? privateKey.replace(/\\n/g, '\n')
           : privateKey,
