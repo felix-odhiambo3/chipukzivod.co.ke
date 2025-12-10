@@ -26,7 +26,7 @@
  * - Admin Role: Admin privileges are granted by the existence of a document in the `/roles_admin/{userId}` collection. This ensures secure and auditable admin role assignment via the Admin SDK.
  * - User Ownership: Enforces strict ownership for user profiles and bookmarks, preventing unauthorized data access or modification.
  * - Public Read with Restricted Writes: Applies to events, services, gallery media, and announcements, allowing public access while restricting modifications to admins.
- * - No User Listing: Listing all users is disallowed to prevent information harvesting.
+ * - No User Listing: Listing all users is disallowed to prevent information harvesting, except for admins.
  * - Self-Creation: Users can only create their own profile document using their authenticated UID.
  *
  * Denormalization for Authorization:
@@ -79,14 +79,61 @@ service cloud.firestore {
         return status == 'published' || isAdmin();
     }
     
+    /**
+     * Validates that only a specific set of fields are being updated.
+     * @param {list} allowedFields - A list of strings representing the fields that are allowed to be modified.
+     * @returns {boolean} True if the update is restricted to the allowed fields, false otherwise.
+     */
     function isUpdatingAllowedFields(allowedFields) {
       let incomingKeys = request.resource.data.keys();
       let currentKeys = resource.data.keys();
-      // Check that no fields are being removed
-      let onlyAllowedFields = incomingKeys.removeAll(currentKeys).size() == 0;
-      // Check that only allowed fields are being modified
-      return incomingKeys.hasAll(allowedFields) && onlyAllowedFields;
+      // Check that no fields are being removed that are not in the allowed list
+      let removedKeys = currentKeys.removeAll(incomingKeys);
+      let allowedRemoved = removedKeys.removeAll(allowedFields).size() == 0;
+      // Check that only allowed fields are being modified or added
+      let modifiedOrAddedKeys = incomingKeys.removeAll(currentKeys);
+      let allowedModifiedOrAdded = modifiedOrAddedKeys.removeAll(allowedFields).size() == 0;
+      // Combine all keys being touched
+      let allTouchedKeys = incomingKeys.toSet().union(currentKeys.toSet());
+      let allAllowed = allTouchedKeys.hasOnly(allowedFields.toSet().union(currentKeys.toSet()));
+
+      return allAllowed;
     }
+    
+    /**
+     * @description Validates that a user is only adding their own UID to the 'readBy' array for a notification.
+     * @returns {boolean} True if the update is a valid "mark as read" action, false otherwise.
+     */
+    function isMarkingAsRead() {
+      // Ensure the request is authenticated
+      if (!isSignedIn()) {
+        return false;
+      }
+      
+      let incomingData = request.resource.data;
+      let existingData = resource.data;
+
+      // Rule: The new 'readBy' array must be a list.
+      if (!(incomingData.readBy is list)) {
+        return false;
+      }
+
+      // Rule: The user must be adding themselves to the list, not removing.
+      // And the user must not already be in the list.
+      let isAddingSelf = incomingData.readBy.size() == existingData.readBy.size() + 1 &&
+          request.auth.uid in incomingData.readBy &&
+          !(request.auth.uid in existingData.readBy);
+
+      if (!isAddingSelf) {
+        return false;
+      }
+
+      // Rule: Only the 'readBy' field can be modified. All other fields must be identical.
+      let otherFieldsChanged = incomingData.diff(existingData).affectedKeys().removeAll(['readBy']).size() > 0;
+      
+      return !otherFieldsChanged;
+    }
+
 
     /***************** Events Collection Rules *****************/
     /**
@@ -115,6 +162,7 @@ service cloud.firestore {
      * @description Controls access to user profile documents.
      * @path /users/{userId}
      * @allow (get): Users can read their own profile, and admins can read any profile.
+     * @allow (list): Admins can list all user profiles.
      * @allow (create): Users can create their own profile with a default "user" role.
      * @deny (create): Users cannot set their own role to "admin" during creation.
      * @allow (update): Users can update their own profile, but cannot change their role.
@@ -340,15 +388,18 @@ service cloud.firestore {
      * @description Controls access to notification documents.
      * @path /notifications/{notificationId}
      * @allow (get, list): Authenticated users can read notifications.
-     * @allow (create, update, delete): Only admins can create, update, or delete notifications.
-     * @deny (create, update, delete): Non-admins cannot modify notifications.
+     * @allow (create, delete): Only admins can create or delete notifications.
+     * @allow (update): Admins can update any field. Authenticated users can update ONLY to add their own UID to the `readBy` array.
+     * @deny (create, update, delete): Non-admins cannot modify notifications beyond marking them as read.
      */
     match /notifications/{notificationId} {
       allow get: if isSignedIn();
       allow list: if isSignedIn();
       allow create: if isAdmin();
-      allow update: if isAdmin() && resource != null;
+      allow update: if (isAdmin() && resource != null) || isMarkingAsRead();
       allow delete: if isAdmin() && resource != null;
     }
   }
 }
+
+    
