@@ -266,7 +266,7 @@ service cloud.firestore {
      */
     match /gallery/{mediaId} {
       allow get: if isPublishedOrAdmin(resource.data.status);
-      allow list: if isAdmin() || (request.query.where.size() > 0 && request.query.where[0][2] == 'published');
+      allow list: if true;
       
       allow create: if isAdmin() && request.resource.data.createdByAdminId == request.auth.uid;
       allow update: if isAdmin() && resource != null;
