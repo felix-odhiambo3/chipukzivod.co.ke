@@ -36,8 +36,11 @@ const nextConfig = {
     ],
   },
   env: {
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
-    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: process.env.CLOUDINARY_UPLOAD_PRESET,
+    // Expose only the necessary public Cloudinary variables to the client.
+    // The NEXT_PUBLIC_ prefix makes them available in the browser.
+    // Server-side-only variables (like CLOUDINARY_API_SECRET) should NOT be listed here.
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
   }
 };
 
